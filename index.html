@@ -44,15 +44,130 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 .btn-parent { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 .btn-parent:hover { background: rgba(255,255,255,0.25); }
 .btn-exit { background: #c62828; color: #fff; }
+.btn-feedback { background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.15); text-decoration: none; font-size: 8px; }
+.btn-feedback:hover { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.35); }
+
+/* Hamburger menu */
+.hamburger {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 5px; padding: 6px; border-radius: 4px;
+  transition: background 0.15s;
+}
+.hamburger:hover { background: rgba(255,255,255,0.1); }
+.hamburger span {
+  display: block; width: 20px; height: 2px;
+  background: rgba(255,255,255,0.8); border-radius: 2px;
+  transition: all 0.2s;
+}
+.ham-menu {
+  position: absolute; top: 56px; right: 16px;
+  background: #fff; border: 1.5px solid var(--card-border);
+  border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+  z-index: 100; min-width: 200px; overflow: hidden;
+  display: none;
+}
+.ham-menu.open { display: block; }
+.ham-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  font-family: 'Exo 2', sans-serif; font-size: 13px; color: var(--text);
+  cursor: pointer; text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  transition: background 0.13s;
+}
+.ham-item:last-child { border-bottom: none; }
+.ham-item:hover { background: var(--accent-light); }
+.ham-item-icon { font-size: 16px; }
+.ham-item-label { flex: 1; }
+.ham-item-sub { font-size: 10px; color: var(--text-light); margin-top: 1px; }
+
+/* README modal */
+.readme-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,27,46,0.5); backdrop-filter: blur(5px);
+  z-index: 200; display: none; align-items: flex-start; justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.readme-overlay.open { display: flex; }
+.readme-modal {
+  background: #fff; border-radius: 14px;
+  width: 100%; max-width: 680px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  overflow: hidden; margin: auto;
+}
+.readme-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1.5px solid var(--rule);
+  background: var(--accent); position: sticky; top: 0;
+}
+.readme-header-title {
+  font-family: 'Orbitron', monospace; font-size: 13px;
+  font-weight: 700; color: #fff; letter-spacing: 1px;
+}
+.readme-close {
+  background: none; border: none; color: rgba(255,255,255,0.7);
+  font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.readme-close:hover { color: #fff; }
+.readme-body {
+  padding: 24px 28px; overflow-y: auto; max-height: 75vh;
+  font-family: 'Exo 2', sans-serif; font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.readme-body h1 { font-family: 'Orbitron', monospace; font-size: 18px; color: var(--accent); margin: 0 0 16px; }
+.readme-body h2 { font-family: 'Orbitron', monospace; font-size: 13px; color: var(--accent-mid); margin: 24px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+.readme-body h3 { font-family: 'Orbitron', monospace; font-size: 11px; color: var(--text-mid); margin: 16px 0 6px; }
+.readme-body p { margin: 0 0 10px; }
+.readme-body ul { padding-left: 20px; margin: 0 0 10px; }
+.readme-body li { margin-bottom: 4px; }
+.readme-body table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 12px; }
+.readme-body th { background: var(--accent); color: #fff; padding: 7px 10px; text-align: left; font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 1px; }
+.readme-body td { padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+.readme-body tr:last-child td { border-bottom: none; }
+.readme-body code { background: #f0ede8; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+.readme-body hr { border: none; border-top: 1.5px solid var(--rule); margin: 20px 0; }
+.readme-body strong { font-weight: 600; }
+.readme-loading { padding: 40px; text-align: center; color: var(--text-light); font-family: 'Orbitron', monospace; font-size: 10px; letter-spacing: 2px; }
+
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  padding: 16px 24px;
+  border-top: 1.5px solid var(--rule);
+  background: #f9f7f3;
+  margin-top: 8px;
+}
+.footer-left {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px; color: var(--text-light); letter-spacing: 0.5px;
+}
+.footer-center {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.footer-cta-text {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px; color: var(--text-mid);
+}
+.footer-feedback-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; letter-spacing: 1px;
+  padding: 7px 14px; border-radius: 5px;
+  background: var(--accent); color: #fff;
+  border: none; text-decoration: none;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+.footer-feedback-btn:hover { background: var(--accent-mid); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 18px; padding: 24px; max-width: 1400px; margin: 0 auto; }
 
-.card { background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); transition: box-shadow 0.2s; position: relative; }
+.card { background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); transition: box-shadow 0.2s; position: relative; overflow: visible; }
 .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
 .card.status-launched { border-color: var(--launched-border); }
 .card.status-repair   { border-color: var(--repair-border); }
 
-.card-topbar { display: flex; align-items: center; padding: 6px 14px; min-height: 48px; border-bottom: 1.5px solid var(--rule); background: #f9f7f3; border-radius: 11px 11px 0 0; gap: 8px; }
+.repair-box.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 .card-num { font-family: 'Orbitron', monospace; font-size: 8px; color: var(--text-light); letter-spacing: 2px; min-width: 28px; flex-shrink: 0; }
 .card-name-wrap { flex: 1; text-align: center; }
 .card-name { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; line-height: 1.2; }
@@ -68,15 +183,24 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 
 .card-visual { display: flex; flex-direction: row; align-items: flex-end; justify-content: center; padding: 14px 8px 12px; gap: 10px; }
 
-/* Fuel gauge - 3 tappable segments stacked vertically */
+/* Fuel gauge - 3 segments (in progress) or 5 segments (launched) */
 .fuel-wrap { display: flex; flex-direction: column; align-items: center; height: 150px; }
 .fuel-label-top { font-family: 'Orbitron', monospace; font-size: 7px; color: var(--text-light); letter-spacing: 1px; margin-bottom: 5px; text-align: center; }
 .fuel-segments { display: flex; flex-direction: column-reverse; gap: 4px; flex: 1; width: 22px; }
 .fuel-seg { flex: 1; border-radius: 4px; border: 1.5px solid #ccc; background: #f0ede8; cursor: pointer; transition: all 0.18s; }
 .fuel-seg:hover { opacity: 0.8; }
+/* 3-segment colours (in progress) */
 .fuel-seg.f1 { background: #ef5350; border-color: #b71c1c; }
 .fuel-seg.f2 { background: #ff9800; border-color: #e65100; }
 .fuel-seg.f3 { background: #42a5f5; border-color: #1565c0; }
+/* 5-segment colours (launched) - gradient from red to green */
+.fuel-seg.l1 { background: #ef5350; border-color: #b71c1c; }
+.fuel-seg.l2 { background: #ff9800; border-color: #e65100; }
+.fuel-seg.l3 { background: #ffca28; border-color: #f9a825; }
+.fuel-seg.l4 { background: #66bb6a; border-color: #388e3c; }
+.fuel-seg.l5 { background: #42a5f5; border-color: #1565c0; }
+/* launched fuel segments not tappable by child - auto managed */
+.fuel-seg.auto { cursor: default; pointer-events: none; }
 
 .rocket-area { flex: 1; height: 155px; display: flex; align-items: flex-end; justify-content: center; }
 
@@ -90,6 +214,9 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 .launched-check { width: 100%; height: 44px; border-radius: 6px; border: 1.5px solid var(--card-border); background: #fafaf8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.18s; font-size: 20px; }
 .launched-check.on { background: var(--launched-bg); border-color: var(--launched-border); }
 .launched-check:hover { border-color: var(--launched-col); }
+.launched-check.on.warn { background: #fff8e1 !important; border: 2.5px solid #f9a825 !important; }
+.launched-check.on.warn:hover { border-color: #f9a825 !important; }
+.card.status-repair { border: 2.5px solid var(--repair-col) !important; }
 
 .retest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
 .rdot { aspect-ratio: 1; border-radius: 50%; border: 1.5px solid #ccc; background: #f5f3ef; cursor: pointer; transition: all 0.15s; }
@@ -172,7 +299,7 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 </head>
 <body>
 
-<div class="header">
+<div class="header" style="position:relative;">
   <div>
     <div class="header-title">🚀 SURAH MISSION CONTROL</div>
     <div class="header-subtitle">Quran Memorization Tracker</div>
@@ -180,6 +307,39 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
   <div class="header-right">
     <span class="mode-badge child" id="mode-badge">EXPLORER MODE</span>
     <button class="btn btn-parent" id="parent-btn" onclick="openPin()">⚙ PARENT</button>
+    <button class="hamburger" onclick="toggleHamMenu(event)" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <!-- Dropdown menu -->
+  <div class="ham-menu" id="ham-menu">
+    <div class="ham-item" onclick="openReadme()">
+      <span class="ham-item-icon">📖</span>
+      <div>
+        <div class="ham-item-label">How It Works</div>
+        <div class="ham-item-sub">App guide & feature overview</div>
+      </div>
+    </div>
+    <a class="ham-item" href="https://docs.google.com/forms/d/e/1FAIpQLSe4FYnzAj8nc-klaGET2_VohJ43K9liFUlEuhxk1nF8rbS8bg/viewform" target="_blank" onclick="closeHamMenu()">
+      <span class="ham-item-icon">✉️</span>
+      <div>
+        <div class="ham-item-label">Share Feedback</div>
+        <div class="ham-item-sub">Bugs, ideas & suggestions</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- README modal -->
+<div class="readme-overlay" id="readme-overlay">
+  <div class="readme-modal">
+    <div class="readme-header">
+      <div class="readme-header-title">📖 HOW IT WORKS</div>
+      <button class="readme-close" onclick="closeReadme()">✕</button>
+    </div>
+    <div class="readme-body" id="readme-body">
+      <div class="readme-loading">LOADING...</div>
+    </div>
   </div>
 </div>
 
@@ -196,6 +356,14 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 </div>
 
 <div class="grid" id="grid"></div>
+
+<div class="footer">
+  <div class="footer-left">© 2026 Surah Mission Control. All rights reserved.</div>
+  <div class="footer-center">
+    <span class="footer-cta-text">Enjoying the app? Found a bug? We'd love to hear from you.</span>
+    <a class="footer-feedback-btn" href="https://docs.google.com/forms/d/e/1FAIpQLSe4FYnzAj8nc-klaGET2_VohJ43K9liFUlEuhxk1nF8rbS8bg/viewform" target="_blank">✉ Share Feedback</a>
+  </div>
+</div>
 
 
 
@@ -233,6 +401,24 @@ body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--tex
 
 <script>
 const PIN = '5352';
+// Safe storage wrapper — falls back to in-memory if localStorage is blocked (private/incognito)
+const store = (() => {
+  let mem = {};
+  try {
+    localStorage.setItem('_test', '1');
+    localStorage.removeItem('_test');
+    return {
+      get: k => localStorage.getItem(k),
+      set: (k, v) => localStorage.setItem(k, v)
+    };
+  } catch(e) {
+    return {
+      get: k => mem[k] || null,
+      set: (k, v) => { mem[k] = v; }
+    };
+  }
+})();
+
 let isParent = false, pinBuf = '', activeFilter = 'all';
 
 function setFilter(f, el) {
@@ -242,22 +428,53 @@ function setFilter(f, el) {
   render();
 }
 
+// ============================================================
+// ⚠️  DATA SAFETY — READ BEFORE MAKING ANY CHANGES
+// ============================================================
+// This app has LIVE USERS. Their data lives in localStorage
+// on their devices and cannot be recovered if lost.
+//
+// RULES:
+// 1. NEVER bump the localStorage key (smcv5) unless the data
+//    structure changes in a way that would CRASH the app.
+//    Adding new fields is NOT a reason to bump the key.
+//
+// 2. ALWAYS use the migration/backfill pattern for new fields:
+//    - Add the field with a default in mkSurah()
+//    - Add a backfill line in the migration block at the
+//      bottom of the script to set it on existing records
+//
+// 3. If a key bump is truly unavoidable:
+//    - Read the OLD key first
+//    - Transform the data forward
+//    - Write to the NEW key
+//    - Delete the old key
+//    - NEVER silently abandon old data
+//
+// 4. Before implementing ANY data model change, explain what
+//    will happen to existing records and get confirmation.
+// ============================================================
+
 function mkSurah(id, name, num, o) {
-  return Object.assign({ id, name, num, arabicName:'', meaning:'', launched:false, retests:[false,false,false,false,false,false], lastRetestDate:null, repair:false, fuel:0, color:'#1565c0' }, o||{});
+  return Object.assign({ id, name, num, arabicName:'', meaning:'', launched:false, retests:[false,false,false,false,false,false], lastRetestDate:null, repair:false, fuel:0, lastFuelledAt:0, color:'#1565c0' }, o||{});
 }
 
-let data = JSON.parse(localStorage.getItem('smcv4')||'null') || [
+let data = JSON.parse(store.get('smcv5')||'null') || [
   mkSurah(1,'Al-Fatiha',1,  {arabicName:'الفاتحة', meaning:'The Opening', fuel:3, retests:[true,true,false,false,false,false], lastRetestDate:'2025-03-08'}),
-  mkSurah(2,'Al-Ikhlas',112,{arabicName:'الإخلاص', meaning:'The Sincerity', launched:true, fuel:3, retests:[true,true,true,true,false,false], lastRetestDate:'2025-03-11', color:'#2e7d32'}),
+  mkSurah(2,'Al-Ikhlas',112,{arabicName:'الإخلاص', meaning:'The Sincerity', launched:true, fuel:5, lastFuelledAt:0, retests:[true,true,true,true,false,false], lastRetestDate:'2025-03-11', color:'#2e7d32'}),
   mkSurah(3,'Al-Falaq',113, {arabicName:'الفلق',   meaning:'The Daybreak',  fuel:1, repair:true, retests:[true,false,false,false,false,false], lastRetestDate:'2025-02-20', color:'#c62828'}),
   mkSurah(4,'An-Nas',114,   {arabicName:'الناس',   meaning:'Mankind',       fuel:2, retests:[true,true,false,false,false,false], lastRetestDate:'2025-03-05', color:'#e65100'}),
 ];
 
-function save() { localStorage.setItem('smcv4', JSON.stringify(data)); }
+function save() { store.set('smcv5', JSON.stringify(data)); }
+
+// Global retest session counter
+let globalRetestCount = parseInt(store.get('smcv5_grc') || '0');
+function saveGRC() { store.set('smcv5_grc', String(globalRetestCount)); }
 
 function status(s) {
-  if (s.launched) return 'launched';
-  if (s.repair)   return 'repair';
+  if (s.repair)    return 'repair';
+  if (s.launched)  return 'launched';
   if (s.retests.some(Boolean)) return 'retest';
   return 'none';
 }
@@ -295,15 +512,20 @@ function render() {
 
 function cardHtml(s, st) {
   const dateStr = s.lastRetestDate ? 'Last: ' + fmtDate(s.lastRetestDate) : 'No retest yet';
-  const fuels = [1,2,3].map(seg => {
-    let cls = '';
-    if (s.fuel >= seg) cls = 'f' + seg;
-    return `<div class="fuel-seg ${cls}" onclick="tapFuel(${s.id},${seg})"></div>`;
+  const isLaunched = s.launched || s.repair;
+  const fuelLevel = isLaunched ? computeFuel(s) : s.fuel;
+  const segCount = isLaunched ? 5 : 3;
+  const fuels = Array.from({length: segCount}, (_,i) => {
+    const seg = i + 1;
+    const filled = fuelLevel >= seg;
+    const cls = filled ? (isLaunched ? 'l'+seg : 'f'+seg) : '';
+    const autoCls = isLaunched ? 'auto' : '';
+    return `<div class="fuel-seg ${cls} ${autoCls}" onclick="${isLaunched ? '' : 'tapFuel('+s.id+','+seg+')'}"></div>`;
   }).join('');
   const dots = s.retests.map((r,i) =>
     `<div class="rdot ${r?'on':''}" onclick="tapRetest(${s.id},${i})"></div>`
   ).join('');
-  const rClass = s.launched ? 'r-launched' : '';
+  const rClass = s.launched && !s.repair ? 'r-launched' : '';
   return `
     <div class="card-topbar">
       <div class="card-num">No.${s.num}</div>
@@ -312,7 +534,7 @@ function cardHtml(s, st) {
         ${s.arabicName ? `<div class="card-arabic">${s.arabicName}</div>` : ''}
         ${s.meaning ? `<div class="card-meaning">${s.meaning}</div>` : ''}
       </div>
-      <div class="status-pip ${st}"></div>
+      <div class="status-pip ${s.repair ? 'launched' : st}"></div>
     </div>
     <div class="card-body">
       <div class="card-visual">
@@ -330,8 +552,8 @@ function cardHtml(s, st) {
       <div class="card-stats">
         <div>
           <div class="stat-head">LAUNCHED</div>
-          <div class="launched-check ${s.launched?'on':''}" onclick="tapLaunch(${s.id})">
-            ${s.launched ? '✦' : ''}
+          <div class="launched-check ${s.launched||s.repair?'on':''} ${s.repair?'warn':''}" onclick="tapLaunch(${s.id})">
+            ${s.repair ? '⚠️' : s.launched ? '✦' : ''}
           </div>
         </div>
         <div>
@@ -341,8 +563,8 @@ function cardHtml(s, st) {
         </div>
         <div>
           <div class="stat-head">REPAIR</div>
-          <div class="repair-box ${s.repair?'on':''}" onclick="tapRepair(${s.id})">
-            <div class="repair-icon-wrap">${s.repair ? '🔧' : '🔧'}</div>
+          <div class="repair-box ${s.repair?'on':''} ${!s.launched&&!s.repair?'disabled':''}" onclick="tapRepair(${s.id})">
+            <div class="repair-icon-wrap">🔧</div>
             <div class="repair-lbl ${s.repair?'on':''}">${s.repair ? 'NEEDS REPAIR' : 'REPAIR'}</div>
           </div>
         </div>
@@ -410,9 +632,21 @@ function shade(hex, p) {
   return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
 }
 
+// Compute current fuel for a launched surah based on sessions elapsed since last refuel
+function computeFuel(s) {
+  if (!s.launched && !s.repair) return s.fuel; // in-progress: use manual fuel
+  if (s.repair) return s.fuel; // frozen while in repair
+  const launchedCount = data.filter(x => x.launched || x.repair).length;
+  const drainEvery = launchedCount < 12 ? 2 : 5;
+  const elapsed = globalRetestCount - (s.lastFuelledAt || 0);
+  const drained = Math.floor(elapsed / drainEvery);
+  return Math.max(0, 5 - drained);
+}
+
 // Actions
 function tapFuel(id, seg) {
   const s = data.find(x=>x.id===id);
+  if (s.launched || s.repair) return; // auto-managed when launched
   s.fuel = s.fuel >= seg ? seg-1 : seg;
   save(); render();
 }
@@ -420,23 +654,33 @@ function tapLaunch(id) {
   if (!isParent) { toast('🔒 Parent login required to mark as launched'); return; }
   const s = data.find(x=>x.id===id);
   s.launched = !s.launched;
-  if (s.launched) { s.fuel=3; s.repair=false; }
+  if (s.launched) { s.fuel=5; s.repair=false; s.lastFuelledAt=globalRetestCount; }
   save(); render();
 }
 function tapRetest(id, i) {
+  if (!isParent) { toast('🔒 Parent login required to log a retest'); return; }
   const s = data.find(x=>x.id===id);
   s.retests[i] = !s.retests[i];
   if (s.retests[i]) {
     s.lastRetestDate = new Date().toISOString().slice(0,10);
-    if (s.repair) { s.repair=false; toast('✓ Repair cleared — retest recorded!'); }
+    // Top up fuel for this surah
+    if (s.launched || s.repair) {
+      s.fuel = 5;
+      s.lastFuelledAt = globalRetestCount;
+    }
+    if (s.repair) { s.repair=false; s.launched=true; toast('✓ Repair cleared — back to launched!'); }
+    // Increment global counter — affects fuel of all other launched surahs
+    globalRetestCount++;
+    saveGRC();
   }
   save(); render();
 }
 function tapRepair(id) {
   const s = data.find(x=>x.id===id);
-  if (s.launched && !isParent) { toast('🔒 Parent required to modify a launched surah'); return; }
+  if (!s.launched && !s.repair) { toast('🚀 Surah must be launched before marking for repair'); return; }
+  if (s.repair && !isParent) { toast('🔒 Parent login required to clear repair'); return; }
   s.repair = !s.repair;
-  if (s.repair) s.launched = false;
+  if (!s.repair) s.launched = true; // restores launched state when repair is cleared
   save(); render();
 }
 function openPicker(id, e) {
@@ -660,14 +904,79 @@ function toast(msg) {
   el.textContent=msg; el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2600);
 }
 
-// Backfill arabicName/meaning for any saved cards missing it
+// ========== HAMBURGER MENU ==========
+function toggleHamMenu(e) {
+  e.stopPropagation();
+  document.getElementById('ham-menu').classList.toggle('open');
+}
+function closeHamMenu() {
+  document.getElementById('ham-menu').classList.remove('open');
+}
+document.addEventListener('click', () => closeHamMenu());
+
+// ========== README ==========
+let readmeLoaded = false;
+async function openReadme() {
+  closeHamMenu();
+  document.getElementById('readme-overlay').classList.add('open');
+  if (readmeLoaded) return;
+  try {
+    const res = await fetch('https://cdn.jsdelivr.net/gh/merziyahp/surah-tracker@main/README.md');
+    const md = await res.text();
+    document.getElementById('readme-body').innerHTML = renderMd(md);
+    readmeLoaded = true;
+  } catch(e) {
+    document.getElementById('readme-body').innerHTML = '<p style="color:var(--repair-col)">Could not load guide — please check your internet connection.</p>';
+  }
+}
+function closeReadme() {
+  document.getElementById('readme-overlay').classList.remove('open');
+}
+
+function renderMd(md) {
+  return md
+    // h1
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // h2
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    // h3
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    // hr
+    .replace(/^---$/gm, '<hr>')
+    // bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // tables - header row
+    .replace(/^\|(.+)\|\s*\n\|[-| :]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (_, header, rows) => {
+      const ths = header.split('|').filter(s=>s.trim()).map(s=>`<th>${s.trim()}</th>`).join('');
+      const trs = rows.trim().split('\n').map(row => {
+        const tds = row.split('|').filter(s=>s.trim()).map(s=>`<td>${s.trim()}</td>`).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    })
+    // unordered list items
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    // numbered list
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // wrap consecutive li in ul
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    // paragraphs - lines with content not already tagged
+    .replace(/^(?!<[a-z]).+$/gm, s => s.trim() ? `<p>${s}</p>` : '')
+    // clean up empty lines
+    .replace(/\n{3,}/g, '\n\n');
+}
 data.forEach(s => {
   if (!s.arabicName || !s.meaning) {
     const ref = SURAHS.find(x => x.n === s.num);
     if (ref) { s.arabicName = ref.ar; s.meaning = ref.meaning; }
   }
+  if (s.lastFuelledAt === undefined) s.lastFuelledAt = 0;
+  if (s.launched && s.fuel < 5) s.fuel = 5; // upgrade old launched cards to 5 segments
 });
-save();
+store.set('smcv5', JSON.stringify(data));
 render();
 </script>
 </body>
