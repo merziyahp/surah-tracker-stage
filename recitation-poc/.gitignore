@@ -1,0 +1,27 @@
+# Audio recordings — never commit these
+*.m4a
+*.mp3
+*.wav
+*.webm
+*.ogg
+*.flac
+*.aac
+
+# POC output
+poc_results.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Environment / secrets — never commit these
+.env
+*.env
+
+# OS clutter
+.DS_Store
+Thumbs.db
