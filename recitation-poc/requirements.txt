@@ -1,0 +1,8 @@
+# Pass A & B — OpenAI Whisper API
+openai>=1.0.0
+
+# Pass C — Quran-tuned model, runs locally
+transformers>=4.35.0
+torch>=2.0.0
+librosa>=0.10.0
+soundfile>=0.12.0
