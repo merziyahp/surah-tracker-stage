@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Surah Mission Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1eb;
+  --card-bg: #ffffff;
+  --card-border: #d8d0c4;
+  --accent: #1a2744;
+  --accent-mid: #2e4a8a;
+  --accent-light: #e8edf8;
+  --launched-col: #2e7d32;
+  --launched-bg: #e8f5e9;
+  --launched-border: #a5d6a7;
+  --repair-col: #c62828;
+  --repair-bg: #ffebee;
+  --repair-border: #ef9a9a;
+  --retest-col: #e65100;
+  --text: #1a1a2e;
+  --text-mid: #4a4a6a;
+  --text-light: #8a8aaa;
+  --rule: #e0dbd2;
+  --dashed: #c8c0b4;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.header {
+  background: var(--accent); padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.header-title { font-family: 'Orbitron', monospace; font-size: clamp(12px,2.5vw,20px); font-weight: 900; color: #fff; letter-spacing: 2px; }
+.header-subtitle { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.mode-badge { font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 2px; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; }
+.mode-badge.parent { background: #fff3cd; color: #7c5200; border: 1px solid #f0c040; }
+.mode-badge.child  { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); }
+.btn { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 1px; padding: 8px 14px; border-radius: 5px; border: none; cursor: pointer; transition: all 0.18s; text-transform: uppercase; }
+.btn-parent { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+.btn-parent:hover { background: rgba(255,255,255,0.25); }
+.btn-exit { background: #c62828; color: #fff; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 18px; padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+.card { background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); transition: box-shadow 0.2s; position: relative; }
+.card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+.card.status-launched { border-color: var(--launched-border); }
+.card.status-repair   { border-color: var(--repair-border); }
+
+.card-topbar { display: flex; align-items: center; padding: 6px 14px; min-height: 48px; border-bottom: 1.5px solid var(--rule); background: #f9f7f3; border-radius: 11px 11px 0 0; gap: 8px; }
+.card-num { font-family: 'Orbitron', monospace; font-size: 8px; color: var(--text-light); letter-spacing: 2px; min-width: 28px; flex-shrink: 0; }
+.card-name-wrap { flex: 1; text-align: center; }
+.card-name { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; line-height: 1.2; }
+.card-arabic { font-size: 15px; color: var(--accent); line-height: 1.3; margin-top: 1px; direction: rtl; }
+.card-meaning { font-size: 9px; color: var(--text-light); margin-top: 1px; letter-spacing: 0.3px; }
+.status-pip { width: 9px; height: 9px; border-radius: 50%; background: #ccc; margin-left: 8px; flex-shrink: 0; }
+.status-pip.launched { background: var(--launched-col); }
+.status-pip.repair   { background: var(--repair-col); }
+.status-pip.retest   { background: var(--retest-col); }
+
+.card-body { display: grid; grid-template-columns: 1fr 1px 1fr; min-height: 230px; }
+.divider-v { background: var(--rule); align-self: stretch; }
+
+.card-visual { display: flex; flex-direction: row; align-items: flex-end; justify-content: center; padding: 14px 8px 12px; gap: 10px; }
+
+/* Fuel gauge - 3 tappable segments stacked vertically */
+.fuel-wrap { display: flex; flex-direction: column; align-items: center; height: 150px; }
+.fuel-label-top { font-family: 'Orbitron', monospace; font-size: 7px; color: var(--text-light); letter-spacing: 1px; margin-bottom: 5px; text-align: center; }
+.fuel-segments { display: flex; flex-direction: column-reverse; gap: 4px; flex: 1; width: 22px; }
+.fuel-seg { flex: 1; border-radius: 4px; border: 1.5px solid #ccc; background: #f0ede8; cursor: pointer; transition: all 0.18s; }
+.fuel-seg:hover { opacity: 0.8; }
+.fuel-seg.f1 { background: #ef5350; border-color: #b71c1c; }
+.fuel-seg.f2 { background: #ff9800; border-color: #e65100; }
+.fuel-seg.f3 { background: #42a5f5; border-color: #1565c0; }
+
+.rocket-area { flex: 1; height: 155px; display: flex; align-items: flex-end; justify-content: center; }
+
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes flicker { 0%,100%{opacity:1;transform:scaleY(1)} 40%{opacity:.8;transform:scaleY(.88) scaleX(1.07)} 70%{opacity:.95;transform:scaleY(1.04)} }
+.r-launched { animation: float 2.2s ease-in-out infinite; }
+
+.card-stats { padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 10px; }
+.stat-head { font-family: 'Orbitron', monospace; font-size: 7px; letter-spacing: 2px; color: var(--text-light); text-transform: uppercase; margin-bottom: 5px; }
+
+.launched-check { width: 100%; height: 44px; border-radius: 6px; border: 1.5px solid var(--card-border); background: #fafaf8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.18s; font-size: 20px; }
+.launched-check.on { background: var(--launched-bg); border-color: var(--launched-border); }
+.launched-check:hover { border-color: var(--launched-col); }
+
+.retest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.rdot { aspect-ratio: 1; border-radius: 50%; border: 1.5px solid #ccc; background: #f5f3ef; cursor: pointer; transition: all 0.15s; }
+.rdot.on { background: var(--retest-col); border-color: var(--retest-col); box-shadow: 0 0 5px rgba(230,81,0,.3); }
+.rdot:hover { border-color: var(--retest-col); transform: scale(1.1); }
+
+.last-date { font-family: 'Exo 2', sans-serif; font-size: 9px; color: var(--text-light); margin-top: 4px; min-height: 13px; }
+
+.repair-box { width: 100%; min-height: 38px; border-radius: 6px; border: 1.5px solid var(--card-border); background: #fafaf8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.18s; gap: 5px; padding: 6px; }
+.repair-box.on { background: var(--repair-bg); border-color: var(--repair-border); }
+.repair-box:hover { border-color: var(--repair-col); }
+.repair-icon-wrap { font-size: 16px; line-height: 1; }
+.repair-lbl { font-family: 'Orbitron', monospace; font-size: 7px; letter-spacing: 1px; color: var(--text-light); }
+.repair-lbl.on { color: var(--repair-col); font-weight: 700; }
+
+.card-footer { padding: 7px 14px; border-top: 1.5px solid var(--rule); display: flex; align-items: center; justify-content: space-between; background: #f9f7f3; border-radius: 0 0 11px 11px; position: relative; }
+.color-btn { font-family: 'Exo 2', sans-serif; font-size: 10px; color: var(--text-mid); background: none; border: 1px solid var(--card-border); border-radius: 4px; padding: 4px 9px; cursor: pointer; transition: all 0.15s; }
+.color-btn:hover { border-color: var(--accent-mid); color: var(--accent-mid); }
+.parent-hint { font-family: 'Orbitron', monospace; font-size: 7px; color: var(--text-light); letter-spacing: 1px; }
+
+.color-popup { position: absolute; bottom: 46px; left: 10px; background: #fff; border: 1.5px solid var(--card-border); border-radius: 8px; padding: 10px; z-index: 50; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 170px; }
+.color-popup.open { display: block; }
+.cp-title { font-family: 'Orbitron', monospace; font-size: 7px; color: var(--text-light); letter-spacing: 2px; margin-bottom: 8px; }
+.swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.13s; }
+.swatch:hover { transform: scale(1.2); }
+.swatch.sel { border-color: var(--accent); }
+
+.filter-bar { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #fff; border-bottom: 1.5px solid var(--rule); flex-wrap: wrap; }
+.search-input { font-family: 'Exo 2', sans-serif; font-size: 13px; padding: 7px 14px; border: 1.5px solid var(--card-border); border-radius: 6px; outline: none; background: #f9f7f3; color: var(--text); width: 200px; transition: border-color 0.15s; }
+.search-input:focus { border-color: var(--accent-mid); }
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.fpill { font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 1px; padding: 6px 11px; border-radius: 20px; border: 1.5px solid var(--card-border); background: #f9f7f3; color: var(--text-mid); cursor: pointer; transition: all 0.15s; }
+.fpill:hover { border-color: var(--accent-mid); color: var(--accent-mid); }
+.fpill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.card-count { font-family: 'Orbitron', monospace; font-size: 8px; color: var(--text-light); letter-spacing: 2px; margin-left: auto; }
+
+.add-card:hover { border-color: var(--accent-mid); color: var(--accent-mid); background: var(--accent-light); }
+.add-icon { font-size: 30px; }
+.add-lbl { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 2px; }
+
+
+
+/* Modals */
+.overlay { position: fixed; inset: 0; background: rgba(26,27,46,0.5); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border: 1.5px solid var(--card-border); border-radius: 16px; padding: 32px; width: 320px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); text-align: center; }
+.mtitle { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 4px; letter-spacing: 2px; }
+.msub { font-size: 10px; color: var(--text-light); letter-spacing: 2px; margin-bottom: 22px; }
+.pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
+.pdot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--card-border); background: #f0ede8; transition: all 0.13s; }
+.pdot.on { background: var(--accent); border-color: var(--accent); }
+.pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
+.pkey { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; padding: 13px; border-radius: 8px; border: 1.5px solid var(--card-border); background: #f9f7f3; color: var(--text); cursor: pointer; transition: all 0.13s; }
+.pkey:hover { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+.perr { color: var(--repair-col); font-size: 10px; margin-top: 6px; font-family: 'Orbitron', monospace; letter-spacing: 1px; }
+.phint { font-size: 9px; color: var(--text-light); margin-top: 10px; letter-spacing: 1px; }
+.minput { width: 100%; padding: 10px 12px; background: #f9f7f3; border: 1.5px solid var(--card-border); border-radius: 6px; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.15s; }
+.minput:focus { border-color: var(--accent-mid); }
+.mactions { display: flex; gap: 10px; }
+.mactions .btn { flex: 1; padding: 12px; }
+.btn-cancel { background: #f0ede8; color: var(--text-mid); border: 1.5px solid var(--card-border); }
+.btn-ok { background: var(--accent); color: #fff; border: none; }
+.btn-ok:hover { background: var(--accent-mid); }
+
+.surah-row { display: flex; align-items: center; padding: 10px 14px; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--rule); transition: background 0.13s; }
+.surah-row:last-child { border-bottom: none; }
+.surah-row:hover { background: var(--accent-light); }
+.surah-row.already-added { background: #f0f7f0; }
+.surah-row.already-added:hover { background: #ffebee; }
+.surah-row.already-added:hover .sr-done::after { content: ' — tap to remove'; font-size: 8px; color: var(--repair-col); }
+.sr-num { font-family: 'Orbitron', monospace; font-size: 10px; color: var(--text-light); min-width: 26px; }
+.sr-arabic { font-size: 18px; color: var(--accent); line-height: 1; min-width: 70px; text-align: right; direction: rtl; }
+.sr-names { flex: 1; }
+.sr-english { font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+.sr-meaning { font-size: 10px; color: var(--text-light); margin-top: 1px; }
+.sr-add { font-family: 'Orbitron', monospace; font-size: 8px; color: var(--accent-mid); letter-spacing: 1px; background: var(--accent-light); border: 1px solid var(--accent-mid); border-radius: 4px; padding: 3px 8px; }
+.sr-done { font-size: 11px; color: var(--launched-col); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🚀 SURAH MISSION CONTROL</div>
+    <div class="header-subtitle">Quran Memorization Tracker</div>
+  </div>
+  <div class="header-right">
+    <span class="mode-badge child" id="mode-badge">EXPLORER MODE</span>
+    <button class="btn btn-parent" id="parent-btn" onclick="openPin()">⚙ PARENT</button>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <input class="search-input" id="search" placeholder="🔍  Search surah..." oninput="render()" />
+  <div class="filter-pills">
+    <button class="fpill active" data-f="all"    onclick="setFilter('all',this)">All</button>
+    <button class="fpill"        data-f="launched" onclick="setFilter('launched',this)">✦ Launched</button>
+    <button class="fpill"        data-f="repair"   onclick="setFilter('repair',this)">🔧 Repair</button>
+    <button class="fpill"        data-f="retest"   onclick="setFilter('retest',this)">◎ Re-test</button>
+    <button class="fpill"        data-f="none"     onclick="setFilter('none',this)">◌ In Progress</button>
+  </div>
+  <div class="card-count" id="card-count"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+
+
+<!-- PIN -->
+<div class="overlay" id="pin-overlay">
+  <div class="modal">
+    <div class="mtitle">🔐 PARENT ACCESS</div>
+    <div class="msub">ENTER PIN TO CONTINUE</div>
+    <div class="pin-dots"><div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div><div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div></div>
+    <div class="pin-pad">
+      <button class="pkey" onclick="pp('1')">1</button><button class="pkey" onclick="pp('2')">2</button><button class="pkey" onclick="pp('3')">3</button>
+      <button class="pkey" onclick="pp('4')">4</button><button class="pkey" onclick="pp('5')">5</button><button class="pkey" onclick="pp('6')">6</button>
+      <button class="pkey" onclick="pp('7')">7</button><button class="pkey" onclick="pp('8')">8</button><button class="pkey" onclick="pp('9')">9</button>
+      <button class="pkey" onclick="pc()" style="font-size:11px;color:var(--repair-col)">CLR</button>
+      <button class="pkey" onclick="pp('0')">0</button>
+      <button class="pkey" onclick="closePin()" style="font-size:13px;color:var(--text-light)">✕</button>
+    </div>
+    <div class="perr" id="perr"></div>
+    <div class="phint"></div>
+  </div>
+</div>
+
+<!-- ADD SURAH -->
+<div class="overlay" id="add-overlay">
+  <div class="modal" style="width:420px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;">
+    <div class="mtitle">+ ADD SURAH</div>
+    <div class="msub">SELECT A CHAPTER TO TRACK</div>
+    <input class="minput" id="inp-search" placeholder="🔍  Search by name or number..." oninput="filterSurahList()" style="margin-bottom:8px;" />
+    <div id="surah-list" style="flex:1;overflow-y:auto;border:1.5px solid var(--card-border);border-radius:8px;max-height:400px;"></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-cancel" onclick="closeAdd()" style="width:100%;padding:12px;">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PIN = '5352';
+let isParent = false, pinBuf = '', activeFilter = 'all';
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.fpill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function mkSurah(id, name, num, o) {
+  return Object.assign({ id, name, num, arabicName:'', meaning:'', launched:false, retests:[false,false,false,false,false,false], lastRetestDate:null, repair:false, fuel:0, color:'#1565c0' }, o||{});
+}
+
+let data = JSON.parse(localStorage.getItem('smcv4')||'null') || [
+  mkSurah(1,'Al-Fatiha',1,  {arabicName:'الفاتحة', meaning:'The Opening', fuel:3, retests:[true,true,false,false,false,false], lastRetestDate:'2025-03-08'}),
+  mkSurah(2,'Al-Ikhlas',112,{arabicName:'الإخلاص', meaning:'The Sincerity', launched:true, fuel:3, retests:[true,true,true,true,false,false], lastRetestDate:'2025-03-11', color:'#2e7d32'}),
+  mkSurah(3,'Al-Falaq',113, {arabicName:'الفلق',   meaning:'The Daybreak',  fuel:1, repair:true, retests:[true,false,false,false,false,false], lastRetestDate:'2025-02-20', color:'#c62828'}),
+  mkSurah(4,'An-Nas',114,   {arabicName:'الناس',   meaning:'Mankind',       fuel:2, retests:[true,true,false,false,false,false], lastRetestDate:'2025-03-05', color:'#e65100'}),
+];
+
+function save() { localStorage.setItem('smcv4', JSON.stringify(data)); }
+
+function status(s) {
+  if (s.launched) return 'launched';
+  if (s.repair)   return 'repair';
+  if (s.retests.some(Boolean)) return 'retest';
+  return 'none';
+}
+
+function render() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  const q = (document.getElementById('search')?.value||'').toLowerCase();
+  let visible = data.filter(s => {
+    const st = status(s);
+    const matchFilter = activeFilter === 'all' || st === activeFilter;
+    const matchSearch = !q || s.name.toLowerCase().includes(q) || String(s.num).includes(q);
+    return matchFilter && matchSearch;
+  }).sort((a, b) => {
+    if (a.num === 1) return 1;
+    if (b.num === 1) return -1;
+    return a.num - b.num;
+  });
+  document.getElementById('card-count').textContent = visible.length + ' / ' + data.length + ' SURAHS';
+  visible.forEach(s => {
+    const st = status(s);
+    const d = document.createElement('div');
+    d.className = `card status-${st}`;
+    d.innerHTML = cardHtml(s, st);
+    g.appendChild(d);
+  });
+  if (isParent && activeFilter === 'all' && !q) {
+    const a = document.createElement('div');
+    a.className = 'add-card';
+    a.innerHTML = '<div class="add-icon">＋</div><div class="add-lbl">ADD SURAH</div>';
+    a.onclick = () => openAdd();
+    g.appendChild(a);
+  }
+}
+
+function cardHtml(s, st) {
+  const dateStr = s.lastRetestDate ? 'Last: ' + fmtDate(s.lastRetestDate) : 'No retest yet';
+  const fuels = [1,2,3].map(seg => {
+    let cls = '';
+    if (s.fuel >= seg) cls = 'f' + seg;
+    return `<div class="fuel-seg ${cls}" onclick="tapFuel(${s.id},${seg})"></div>`;
+  }).join('');
+  const dots = s.retests.map((r,i) =>
+    `<div class="rdot ${r?'on':''}" onclick="tapRetest(${s.id},${i})"></div>`
+  ).join('');
+  const rClass = s.launched ? 'r-launched' : '';
+  return `
+    <div class="card-topbar">
+      <div class="card-num">No.${s.num}</div>
+      <div class="card-name-wrap">
+        <div class="card-name">${s.name}</div>
+        ${s.arabicName ? `<div class="card-arabic">${s.arabicName}</div>` : ''}
+        ${s.meaning ? `<div class="card-meaning">${s.meaning}</div>` : ''}
+      </div>
+      <div class="status-pip ${st}"></div>
+    </div>
+    <div class="card-body">
+      <div class="card-visual">
+        <div class="fuel-wrap">
+          <div class="fuel-label-top">FUEL</div>
+          <div class="fuel-segments">${fuels}</div>
+        </div>
+        <div class="rocket-area">
+          <div class="${rClass}" style="width:86px;height:150px;">
+            ${rocketSvg(s)}
+          </div>
+        </div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="card-stats">
+        <div>
+          <div class="stat-head">LAUNCHED</div>
+          <div class="launched-check ${s.launched?'on':''}" onclick="tapLaunch(${s.id})">
+            ${s.launched ? '✦' : ''}
+          </div>
+        </div>
+        <div>
+          <div class="stat-head">RE-TEST</div>
+          <div class="retest-grid">${dots}</div>
+          <div class="last-date">${dateStr}</div>
+        </div>
+        <div>
+          <div class="stat-head">REPAIR</div>
+          <div class="repair-box ${s.repair?'on':''}" onclick="tapRepair(${s.id})">
+            <div class="repair-icon-wrap">${s.repair ? '🔧' : '🔧'}</div>
+            <div class="repair-lbl ${s.repair?'on':''}">${s.repair ? 'NEEDS REPAIR' : 'REPAIR'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="color-btn" onclick="openPicker(${s.id},event)">🎨 Color</button>
+      <div class="parent-hint">${isParent ? '✏ parent mode' : '🔒 parent for launches'}</div>
+      <div class="color-popup" id="cp${s.id}">
+        <div class="cp-title">ROCKET COLOR</div>
+        <div class="swatches">
+          ${['#1565c0','#2e7d32','#c62828','#e65100','#6a1b9a','#00695c','#283593','#4e342e','#37474f','#f9a825'].map(c=>
+            `<div class="swatch ${s.color===c?'sel':''}" style="background:${c}" onclick="setColor(${s.id},'${c}',event)"></div>`
+          ).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function rocketSvg(s) {
+  const c = s.color||'#1565c0';
+  const dk = shade(c,-35), lt = shade(c,45);
+  const flame = s.launched ? `
+    <g transform="translate(36,115)">
+      <ellipse cx="0" cy="0" rx="9" ry="17" fill="#ff9800" opacity="0.9" style="animation:flicker .35s ease-in-out infinite;transform-origin:0 -4px;"/>
+      <ellipse cx="0" cy="-2" rx="5.5" ry="10" fill="#ffeb3b" opacity="0.95" style="animation:flicker .27s ease-in-out infinite reverse;transform-origin:0 -2px;"/>
+      <ellipse cx="0" cy="-6" rx="2.5" ry="5" fill="#fff" opacity="0.7"/>
+    </g>` : '';
+  const warn = s.repair ? `
+    <rect x="24" y="50" width="24" height="60" rx="3" fill="rgba(198,40,40,0.08)"/>
+    <line x1="24" y1="50" x2="48" y2="110" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.35"/>
+    <line x1="48" y1="50" x2="24" y2="110" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.35"/>` : '';
+  return `<svg viewBox="0 0 72 135" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <defs>
+      <linearGradient id="bg${s.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${dk}"/><stop offset="45%" stop-color="${c}"/><stop offset="100%" stop-color="${lt}"/>
+      </linearGradient>
+      <linearGradient id="fg${s.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${c}" stop-opacity=".9"/><stop offset="100%" stop-color="${dk}" stop-opacity=".8"/>
+      </linearGradient>
+    </defs>
+    <path d="M26,88 L10,112 L26,104Z" fill="url(#fg${s.id})" stroke="${dk}" stroke-width="0.5"/>
+    <path d="M46,88 L62,112 L46,104Z" fill="url(#fg${s.id})" stroke="${dk}" stroke-width="0.5"/>
+    <rect x="24" y="50" width="24" height="60" rx="3" fill="url(#bg${s.id})" stroke="${dk}" stroke-width="0.7"/>
+    <path d="M36,6 C30,18 26,34 26,50 L46,50 C46,34 42,18 36,6Z" fill="url(#bg${s.id})" stroke="${dk}" stroke-width="0.7"/>
+    <circle cx="36" cy="38" r="7" fill="none" stroke="${dk}" stroke-width="1.2"/>
+    <circle cx="36" cy="38" r="5.5" fill="rgba(180,220,255,0.55)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
+    <ellipse cx="34" cy="36" rx="2" ry="1.5" fill="rgba(255,255,255,0.45)" transform="rotate(-20,34,36)"/>
+    <rect x="24" y="62" width="24" height="2.5" fill="${dk}" opacity="0.2"/>
+    <rect x="24" y="75" width="24" height="2.5" fill="${dk}" opacity="0.2"/>
+    <rect x="22" y="108" width="28" height="7" rx="2" fill="${dk}" opacity="0.5"/>
+    ${warn}${flame}
+  </svg>`;
+}
+
+function shade(hex, p) {
+  let n=parseInt(hex.slice(1),16);
+  const clamp=(v)=>Math.min(255,Math.max(0,v));
+  const r=clamp((n>>16)+p), g=clamp(((n>>8)&0xff)+p), b=clamp((n&0xff)+p);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+// Actions
+function tapFuel(id, seg) {
+  const s = data.find(x=>x.id===id);
+  s.fuel = s.fuel >= seg ? seg-1 : seg;
+  save(); render();
+}
+function tapLaunch(id) {
+  if (!isParent) { toast('🔒 Parent login required to mark as launched'); return; }
+  const s = data.find(x=>x.id===id);
+  s.launched = !s.launched;
+  if (s.launched) { s.fuel=3; s.repair=false; }
+  save(); render();
+}
+function tapRetest(id, i) {
+  const s = data.find(x=>x.id===id);
+  s.retests[i] = !s.retests[i];
+  if (s.retests[i]) {
+    s.lastRetestDate = new Date().toISOString().slice(0,10);
+    if (s.repair) { s.repair=false; toast('✓ Repair cleared — retest recorded!'); }
+  }
+  save(); render();
+}
+function tapRepair(id) {
+  const s = data.find(x=>x.id===id);
+  if (s.launched && !isParent) { toast('🔒 Parent required to modify a launched surah'); return; }
+  s.repair = !s.repair;
+  if (s.repair) s.launched = false;
+  save(); render();
+}
+function openPicker(id, e) {
+  e.stopPropagation();
+  document.querySelectorAll('.color-popup').forEach(p=>p.classList.remove('open'));
+  document.getElementById('cp'+id).classList.add('open');
+  setTimeout(()=>{ document.addEventListener('click', function h(ev){ if(!ev.target.closest('#cp'+id)&&!ev.target.closest('.color-btn')){ document.getElementById('cp'+id).classList.remove('open'); document.removeEventListener('click',h); } }); }, 0);
+}
+function setColor(id, c, e) {
+  e.stopPropagation();
+  data.find(x=>x.id===id).color = c;
+  document.querySelectorAll('.color-popup').forEach(p=>p.classList.remove('open'));
+  save(); render();
+}
+const SURAHS = [
+  {n:1,  ar:"الفاتحة",    en:"Al-Fatiha",      meaning:"The Opening"},
+  {n:2,  ar:"البقرة",     en:"Al-Baqara",      meaning:"The Cow"},
+  {n:3,  ar:"آل عمران",   en:"Ali 'Imran",     meaning:"Family of Imran"},
+  {n:4,  ar:"النساء",     en:"An-Nisa",        meaning:"The Women"},
+  {n:5,  ar:"المائدة",    en:"Al-Ma'ida",      meaning:"The Table Spread"},
+  {n:6,  ar:"الأنعام",    en:"Al-An'am",       meaning:"The Cattle"},
+  {n:7,  ar:"الأعراف",    en:"Al-A'raf",       meaning:"The Heights"},
+  {n:8,  ar:"الأنفال",    en:"Al-Anfal",       meaning:"The Spoils of War"},
+  {n:9,  ar:"التوبة",     en:"At-Tawba",       meaning:"The Repentance"},
+  {n:10, ar:"يونس",       en:"Yunus",          meaning:"Jonah"},
+  {n:11, ar:"هود",        en:"Hud",            meaning:"Hud"},
+  {n:12, ar:"يوسف",       en:"Yusuf",          meaning:"Joseph"},
+  {n:13, ar:"الرعد",      en:"Ar-Ra'd",        meaning:"The Thunder"},
+  {n:14, ar:"إبراهيم",    en:"Ibrahim",        meaning:"Abraham"},
+  {n:15, ar:"الحجر",      en:"Al-Hijr",        meaning:"The Rocky Tract"},
+  {n:16, ar:"النحل",      en:"An-Nahl",        meaning:"The Bee"},
+  {n:17, ar:"الإسراء",    en:"Al-Isra",        meaning:"The Night Journey"},
+  {n:18, ar:"الكهف",      en:"Al-Kahf",        meaning:"The Cave"},
+  {n:19, ar:"مريم",       en:"Maryam",         meaning:"Mary"},
+  {n:20, ar:"طه",         en:"Ta-Ha",          meaning:"Ta-Ha"},
+  {n:21, ar:"الأنبياء",   en:"Al-Anbiya",      meaning:"The Prophets"},
+  {n:22, ar:"الحج",       en:"Al-Hajj",        meaning:"The Pilgrimage"},
+  {n:23, ar:"المؤمنون",   en:"Al-Mu'minun",    meaning:"The Believers"},
+  {n:24, ar:"النور",      en:"An-Nur",         meaning:"The Light"},
+  {n:25, ar:"الفرقان",    en:"Al-Furqan",      meaning:"The Criterion"},
+  {n:26, ar:"الشعراء",    en:"Ash-Shu'ara",    meaning:"The Poets"},
+  {n:27, ar:"النمل",      en:"An-Naml",        meaning:"The Ant"},
+  {n:28, ar:"القصص",      en:"Al-Qasas",       meaning:"The Stories"},
+  {n:29, ar:"العنكبوت",   en:"Al-'Ankabut",    meaning:"The Spider"},
+  {n:30, ar:"الروم",      en:"Ar-Rum",         meaning:"The Romans"},
+  {n:31, ar:"لقمان",      en:"Luqman",         meaning:"Luqman"},
+  {n:32, ar:"السجدة",     en:"As-Sajda",       meaning:"The Prostration"},
+  {n:33, ar:"الأحزاب",    en:"Al-Ahzab",       meaning:"The Combined Forces"},
+  {n:34, ar:"سبإ",        en:"Saba",           meaning:"Sheba"},
+  {n:35, ar:"فاطر",       en:"Fatir",          meaning:"Originator"},
+  {n:36, ar:"يس",         en:"Ya-Sin",         meaning:"Ya-Sin"},
+  {n:37, ar:"الصافات",    en:"As-Saffat",      meaning:"Those Ranged in Ranks"},
+  {n:38, ar:"ص",          en:"Sad",            meaning:"Sad"},
+  {n:39, ar:"الزمر",      en:"Az-Zumar",       meaning:"The Groups"},
+  {n:40, ar:"غافر",       en:"Ghafir",         meaning:"The Forgiver"},
+  {n:41, ar:"فصلت",       en:"Fussilat",       meaning:"Explained in Detail"},
+  {n:42, ar:"الشورى",     en:"Ash-Shura",      meaning:"The Consultation"},
+  {n:43, ar:"الزخرف",     en:"Az-Zukhruf",     meaning:"The Gold Adornments"},
+  {n:44, ar:"الدخان",     en:"Ad-Dukhan",      meaning:"The Smoke"},
+  {n:45, ar:"الجاثية",    en:"Al-Jathiya",     meaning:"The Crouching"},
+  {n:46, ar:"الأحقاف",    en:"Al-Ahqaf",       meaning:"The Wind-Curved Sandhills"},
+  {n:47, ar:"محمد",       en:"Muhammad",       meaning:"Muhammad"},
+  {n:48, ar:"الفتح",      en:"Al-Fath",        meaning:"The Victory"},
+  {n:49, ar:"الحجرات",    en:"Al-Hujurat",     meaning:"The Rooms"},
+  {n:50, ar:"ق",          en:"Qaf",            meaning:"Qaf"},
+  {n:51, ar:"الذاريات",   en:"Adh-Dhariyat",   meaning:"The Winnowing Winds"},
+  {n:52, ar:"الطور",      en:"At-Tur",         meaning:"The Mount"},
+  {n:53, ar:"النجم",      en:"An-Najm",        meaning:"The Star"},
+  {n:54, ar:"القمر",      en:"Al-Qamar",       meaning:"The Moon"},
+  {n:55, ar:"الرحمن",     en:"Ar-Rahman",      meaning:"The Beneficent"},
+  {n:56, ar:"الواقعة",    en:"Al-Waqi'a",      meaning:"The Inevitable"},
+  {n:57, ar:"الحديد",     en:"Al-Hadid",       meaning:"The Iron"},
+  {n:58, ar:"المجادلة",   en:"Al-Mujadila",    meaning:"The Pleading Woman"},
+  {n:59, ar:"الحشر",      en:"Al-Hashr",       meaning:"The Exile"},
+  {n:60, ar:"الممتحنة",   en:"Al-Mumtahana",   meaning:"She That Is to Be Examined"},
+  {n:61, ar:"الصف",       en:"As-Saf",         meaning:"The Ranks"},
+  {n:62, ar:"الجمعة",     en:"Al-Jumu'a",      meaning:"The Congregation"},
+  {n:63, ar:"المنافقون",  en:"Al-Munafiqun",   meaning:"The Hypocrites"},
+  {n:64, ar:"التغابن",    en:"At-Taghabun",    meaning:"The Mutual Disillusion"},
+  {n:65, ar:"الطلاق",     en:"At-Talaq",       meaning:"The Divorce"},
+  {n:66, ar:"التحريم",    en:"At-Tahrim",      meaning:"The Prohibition"},
+  {n:67, ar:"الملك",      en:"Al-Mulk",        meaning:"The Sovereignty"},
+  {n:68, ar:"القلم",      en:"Al-Qalam",       meaning:"The Pen"},
+  {n:69, ar:"الحاقة",     en:"Al-Haqqah",      meaning:"The Reality"},
+  {n:70, ar:"المعارج",    en:"Al-Ma'arij",     meaning:"The Ascending Stairways"},
+  {n:71, ar:"نوح",        en:"Nuh",            meaning:"Noah"},
+  {n:72, ar:"الجن",       en:"Al-Jinn",        meaning:"The Jinn"},
+  {n:73, ar:"المزمل",     en:"Al-Muzzammil",   meaning:"The Enshrouded One"},
+  {n:74, ar:"المدثر",     en:"Al-Muddaththir", meaning:"The Cloaked One"},
+  {n:75, ar:"القيامة",    en:"Al-Qiyama",      meaning:"The Resurrection"},
+  {n:76, ar:"الإنسان",    en:"Al-Insan",       meaning:"Man"},
+  {n:77, ar:"المرسلات",   en:"Al-Mursalat",    meaning:"The Emissaries"},
+  {n:78, ar:"النبأ",      en:"An-Naba",        meaning:"The Tidings"},
+  {n:79, ar:"النازعات",   en:"An-Nazi'at",     meaning:"Those Who Drag Forth"},
+  {n:80, ar:"عبس",        en:"Abasa",          meaning:"He Frowned"},
+  {n:81, ar:"التكوير",    en:"At-Takwir",      meaning:"The Folding Up"},
+  {n:82, ar:"الانفطار",   en:"Al-Infitar",     meaning:"The Cleaving"},
+  {n:83, ar:"المطففين",   en:"Al-Mutaffifin",  meaning:"The Defrauding"},
+  {n:84, ar:"الانشقاق",   en:"Al-Inshiqaq",    meaning:"The Splitting Open"},
+  {n:85, ar:"البروج",     en:"Al-Buruj",       meaning:"The Mansions of the Stars"},
+  {n:86, ar:"الطارق",     en:"At-Tariq",       meaning:"The Morning Star"},
+  {n:87, ar:"الأعلى",     en:"Al-A'la",        meaning:"The Most High"},
+  {n:88, ar:"الغاشية",    en:"Al-Ghashiya",    meaning:"The Overwhelming"},
+  {n:89, ar:"الفجر",      en:"Al-Fajr",        meaning:"The Dawn"},
+  {n:90, ar:"البلد",      en:"Al-Balad",       meaning:"The City"},
+  {n:91, ar:"الشمس",      en:"Ash-Shams",      meaning:"The Sun"},
+  {n:92, ar:"الليل",      en:"Al-Layl",        meaning:"The Night"},
+  {n:93, ar:"الضحى",      en:"Ad-Duha",        meaning:"The Morning Hours"},
+  {n:94, ar:"الشرح",      en:"Ash-Sharh",      meaning:"The Relief"},
+  {n:95, ar:"التين",      en:"At-Tin",         meaning:"The Fig"},
+  {n:96, ar:"العلق",      en:"Al-'Alaq",       meaning:"The Clot"},
+  {n:97, ar:"القدر",      en:"Al-Qadr",        meaning:"The Power"},
+  {n:98, ar:"البينة",     en:"Al-Bayyina",     meaning:"The Clear Proof"},
+  {n:99, ar:"الزلزلة",    en:"Az-Zalzala",     meaning:"The Earthquake"},
+  {n:100, ar:"العاديات",  en:"Al-'Adiyat",     meaning:"The Courser"},
+  {n:101, ar:"القارعة",   en:"Al-Qari'a",      meaning:"The Calamity"},
+  {n:102, ar:"التكاثر",   en:"At-Takathur",    meaning:"The Rivalry in World Increase"},
+  {n:103, ar:"العصر",     en:"Al-'Asr",        meaning:"The Declining Day"},
+  {n:104, ar:"الهمزة",    en:"Al-Humaza",      meaning:"The Traducer"},
+  {n:105, ar:"الفيل",     en:"Al-Fil",         meaning:"The Elephant"},
+  {n:106, ar:"قريش",      en:"Quraysh",        meaning:"Quraysh"},
+  {n:107, ar:"الماعون",   en:"Al-Ma'un",       meaning:"The Small Kindnesses"},
+  {n:108, ar:"الكوثر",    en:"Al-Kawthar",     meaning:"The Abundance"},
+  {n:109, ar:"الكافرون",  en:"Al-Kafirun",     meaning:"The Disbelievers"},
+  {n:110, ar:"النصر",     en:"An-Nasr",        meaning:"The Divine Support"},
+  {n:111, ar:"المسد",     en:"Al-Masad",       meaning:"The Palm Fibre"},
+  {n:112, ar:"الإخلاص",   en:"Al-Ikhlas",      meaning:"The Sincerity"},
+  {n:113, ar:"الفلق",     en:"Al-Falaq",       meaning:"The Daybreak"},
+  {n:114, ar:"الناس",     en:"An-Nas",         meaning:"Mankind"},
+];
+
+let surahListFilter = '';
+
+function openAdd() {
+  document.getElementById('inp-search').value = '';
+  surahListFilter = '';
+  renderSurahList();
+  document.getElementById('add-overlay').classList.add('open');
+}
+
+function filterSurahList() {
+  surahListFilter = document.getElementById('inp-search').value.toLowerCase();
+  renderSurahList();
+}
+
+function renderSurahList() {
+  const addedNums = new Set(data.map(s => s.num));
+  const q = surahListFilter;
+  const filtered = SURAHS.filter(s =>
+    !q ||
+    s.en.toLowerCase().includes(q) ||
+    s.meaning.toLowerCase().includes(q) ||
+    String(s.n).includes(q) ||
+    s.ar.includes(q)
+  );
+  // Al-Fatiha first, then rest in reverse order (114 down to 2)
+  const sorted = [
+    ...filtered.filter(s => s.n === 1),
+    ...filtered.filter(s => s.n !== 1).reverse()
+  ];
+  const listEl = document.getElementById('surah-list');
+  if (sorted.length === 0) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);font-size:12px;">No surahs found</div>';
+    return;
+  }
+  listEl.innerHTML = sorted.map(s => {
+    const added = addedNums.has(s.n);
+    return `<div class="surah-row ${added?'already-added':''}" onclick="pickSurah(${s.n})">
+      <div class="sr-num">${s.n}</div>
+      <div class="sr-arabic">${s.ar}</div>
+      <div class="sr-names">
+        <div class="sr-english">${s.en}</div>
+        <div class="sr-meaning">${s.meaning}</div>
+      </div>
+      ${added ? '<div class="sr-done" id="sr-badge-'+s.n+'">✓ Added</div>' : '<div class="sr-add">+ ADD</div>'}
+    </div>`;
+  }).join('');
+}
+
+function pickSurah(num) {
+  const s = SURAHS.find(x => x.n === num);
+  if (!s) return;
+  const existingIdx = data.findIndex(x => x.num === num);
+  if (existingIdx !== -1) {
+    // Already added — remove it
+    data.splice(existingIdx, 1);
+    save(); renderSurahList(); render();
+    toast('✕ ' + s.en + ' removed');
+  } else {
+    // Add it
+    data.push(mkSurah(Date.now(), s.en, s.n, { arabicName: s.ar, meaning: s.meaning }));
+    save(); renderSurahList(); render();
+    toast('✓ ' + s.en + ' added!');
+  }
+}
+
+function closeAdd() {
+  document.getElementById('add-overlay').classList.remove('open');
+}
+
+// PIN
+function openPin() { if(isParent){exitParent();return;} pinBuf=''; updPin(); document.getElementById('perr').textContent=''; document.getElementById('pin-overlay').classList.add('open'); }
+function closePin() { document.getElementById('pin-overlay').classList.remove('open'); pinBuf=''; }
+function pp(d) {
+  if (pinBuf.length>=4) return;
+  pinBuf+=d; updPin();
+  if (pinBuf.length===4) {
+    setTimeout(()=>{
+      if (pinBuf===PIN) { isParent=true; closePin(); document.getElementById('mode-badge').textContent='PARENT MODE'; document.getElementById('mode-badge').className='mode-badge parent'; document.getElementById('parent-btn').textContent='✕ EXIT'; document.getElementById('parent-btn').className='btn btn-exit'; render(); }
+      else { document.getElementById('perr').textContent='✕ INCORRECT PIN'; pinBuf=''; updPin(); }
+    },200);
+  }
+}
+function pc() { pinBuf=''; updPin(); }
+function updPin() { for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pdot'+(i<pinBuf.length?' on':''); }
+function exitParent() { isParent=false; document.getElementById('mode-badge').textContent='EXPLORER MODE'; document.getElementById('mode-badge').className='mode-badge child'; document.getElementById('parent-btn').textContent='⚙ PARENT'; document.getElementById('parent-btn').className='btn btn-parent'; render(); }
+
+function toast(msg) {
+  let el=document.getElementById('_toast');
+  if(!el){ el=document.createElement('div'); el.id='_toast'; el.style.cssText='position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:9px 18px;border-radius:8px;font-family:Exo 2,sans-serif;font-size:11px;z-index:300;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;'; document.body.appendChild(el); }
+  el.textContent=msg; el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2600);
+}
+
+// Backfill arabicName/meaning for any saved cards missing it
+data.forEach(s => {
+  if (!s.arabicName || !s.meaning) {
+    const ref = SURAHS.find(x => x.n === s.num);
+    if (ref) { s.arabicName = ref.ar; s.meaning = ref.meaning; }
+  }
+});
+save();
+render();
+</script>
+</body>
+</html>
