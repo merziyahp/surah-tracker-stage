@@ -1,13 +1,13 @@
 # Quran Recitation Practice Aid
 ## Product Requirements & Decision Log
-**Version 2.0 — March 2026**
+**Version 3.1 — March 2026**
 
 | Field | Value |
 |-------|-------|
 | Product | Quran Recitation Practice Aid |
-| Version | 2.0 (POC phase — pre-build) |
+| Version | 3.1 (POC complete — ready to build) |
 | Parent project | Surah Mission Control |
-| Status | Research / POC in progress |
+| Status | POC complete. Architecture decided. Ready to build V1. |
 | Author | Private |
 | Last updated | March 2026 |
 
@@ -15,9 +15,11 @@
 
 ## 1. What this document is
 
-This document replaces the original Recitation Practice Aid PRD (v1.0). It incorporates all decisions and framing shifts made during the design session in March 2026. Anyone picking this project up — including a future LLM coding session — should read this document first. The original PRD is preserved for reference but this version is authoritative.
+This is the third iteration of the Recitation Practice Aid PRD. Version 2.0 captured the architectural framing decisions made in the first design session. This version (3.0) updates the document with findings from the POC session conducted in March 2026, where the system was tested against real child recordings for the first time.
 
-This is not just a product spec. It is also a decision log. Every section that reflects a deliberate choice explains the reasoning and what was ruled out.
+Sections 3, 4, 5, 6, 9, and 12 have changed significantly. Everything else carries forward from v2.0.
+
+This is not just a product spec. It is a decision log. Every section that reflects a deliberate choice explains the reasoning and what was ruled out.
 
 ---
 
@@ -37,152 +39,205 @@ This is not a replacement for a teacher. It is a practice aid.
 
 ### 2.2 Scope — last 36 surahs only
 
-V1 covers surahs 79–114 only. These are the surahs most commonly memorized first in traditional hifz programs. The POC focuses on the three shortest: Al-Ikhlas (112), Al-Kawthar (108), and Al-Asr (103).
+V1 covers surahs 79–114 only. These are the surahs most commonly memorized first in traditional hifz programs. The POC tested three: Al-Ikhlas (112), Al-Kawthar (108), and Al-Asr (103).
 
 ---
 
 ## 3. Core architecture decision
 
-This is the most important section. The original PRD described an open transcription pipeline — record audio, send to ASR, get a transcript, compare to expected text. This framing was revised during the design session.
+> **Updated in v3.0 based on POC results.**
 
-### 3.1 What was ruled out: open transcription
+### 3.1 What was ruled out: dedicated Quran ASR models
 
-Open transcription asks the model: "what did this person say?" For general speech this works well. For Quranic Arabic recited by a child, it fails for two compounding reasons:
+The POC tested `tarteel-ai/whisper-base-ar-quran`, a Whisper model fine-tuned specifically on Quranic recitation data. Despite being purpose-built for this task, it failed on child speech across all three surahs:
 
-- Arabic ASR models are trained predominantly on adult, Modern Standard Arabic speech. Quranic Arabic has distinct phonology. Child speech has different acoustic properties. The intersection — child + Quranic — has essentially no dedicated training data.
-- Even if transcription were accurate, comparing free-form transcript output to expected text is fragile. Small transcription errors cascade into false "skipped word" signals that erode parent trust.
+- Al-Ikhlas: gibberish for ayahs 1–2, 31.6% word coverage
+- Al-Kawthar: garbled nearly every word, 42.9% coverage
+- Al-Asr: hallucinated the first two ayahs, 55.6% coverage
 
-### 3.2 What was also ruled out: direct acoustic comparison
+The root cause: all available Quran ASR models were trained on adult male reciters. Child speech has fundamentally different acoustic properties. The model fails silently — producing plausible-sounding Arabic that bears no relation to what the child said. Silent failure is the worst possible outcome for this product because it generates false feedback that misleads parents.
 
-A second approach considered was comparing the child's audio directly against a reference recording of an adult reciting the same surah. This was ruled out because:
+### 3.2 What was ruled out: raw transcription + text matching
 
-- Child voice and adult voice differ fundamentally in pitch, tempo, and articulation. Direct acoustic matching across that gap is not reliable.
-- The reference recording cannot tell you if the child skipped an ayah. Only the text layer can do that — because the text is the only thing that knows what should have been said.
+Even with accurate transcription, comparing free-form output to expected text word-by-word is fragile. Small transcription errors cascade into false "missing word" signals. The matching layer has no intelligence to recognise that `وَانْهَهُ` and `وَانْحَرْ` are the same word with a garbled consonant.
 
-> **Decision:** reference audio is retained as a UX element (parents and children can listen to the correct recitation for comparison) but it is not a detection mechanism.
+### 3.3 What was ruled out: forced alignment
 
-### 3.3 What was decided: constrained matching
+Timing-based alignment against a reference recording was considered and ruled out. Children pause unpredictably, stretch words for emphasis, hesitate before difficult ayahs, and sometimes restart. Any timing-based approach breaks on real child recitations.
 
-The correct framing is a constrained matching problem, not a transcription problem. The pipeline is:
+### 3.4 What was decided: Gemini as a reasoning layer
 
-- The child selects a known surah before recording
-- The system already has the exact expected Arabic text for that surah
-- ASR runs on the child's audio, constrained to that specific text — not open transcription
-- The system checks which words from the expected text were accounted for
-- Gaps and low-confidence segments are flagged for parent review
+The correct architecture is to send both the audio and the expected Arabic text to Gemini together and ask it to assess whether the child covered the expected content.
 
-The constraint is the most important lever for reliability. The model is not asked "what did you hear?" — it is asked "given that the child was supposed to say these specific words, which ones can you detect?" This is a much narrower and more reliable task.
+This is not transcription followed by matching. It is a single comprehension task: "here is what the child should have said, here is what you heard — assess coverage."
 
-### 3.4 What the text layer is responsible for
+Gemini handles this reliably because:
 
-The known Arabic text of each surah is the ground truth and does the primary work:
+- It was trained on vastly more diverse audio than any Quran-specific model, including children's voices across many languages
+- It uses the expected text as a reasoning constraint, not a post-processing comparison — even if it mishears a word, it can reason "this sounds like what should be here"
+- It produces structured qualitative output (Complete / Partial / Missing per ayah) directly usable for feedback generation
 
-- Defines what words should have been said
-- Provides the constraint for ASR matching
-- Determines what counts as missing, skipped, or substituted
-- Later: provides word-level targets for Tajweed gap detection
+### 3.5 Why Gemini outperformed a Quran-trained model
 
-The reference audio is not load-bearing for detection. The text is.
+A model trained specifically on Quranic recitation performed worse than a general-purpose LLM on child Quranic speech. Specialisation on a narrow distribution (adult male reciters) creates brittleness outside that distribution. Gemini's breadth of training means it degrades gracefully on unusual inputs rather than hallucinating.
+
+The lesson: do not assume domain-specific models are better for this use case. Test on actual child recordings before committing to any model.
 
 ---
 
 ## 4. Pipeline
 
-The V1 pipeline has five stages. Stages 1–3 are mechanical. Stage 4 is where the core technical risk lives. Stage 5 is where product quality is determined.
+> **Updated in v3.0. Stage 4 has changed.**
 
 | Stage | What it does | Risk |
 |-------|-------------|------|
-| 1. Audio capture | Child records on iPad via browser mic or uploaded file | Low |
-| 2. Preprocessing | Normalize volume, trim silence, check minimum quality threshold | Low |
-| 3. Quality gate | If audio is too short, too faint, or too noisy — prompt re-record before processing | Low |
-| 4. Constrained ASR | Run speech recognition against the known surah text | **High** |
-| 5. Feedback generation | Convert detection results into child-friendly output and parent detail | Medium |
+| 1. Audio capture | Child records on iPad via browser mic | Low |
+| 2. Preprocessing | Normalize volume, trim silence, check quality threshold | Low |
+| 3. Quality gate | If audio is too short, faint, or noisy — prompt re-record | Low |
+| 4. Gemini assessment | Send audio + expected surah text to Gemini. Assess ayah coverage and flag missing or partial words. | **Medium** (was High) |
+| 5. Feedback generation | Convert Gemini's structured output into child-friendly feedback and parent detail | Medium |
 
-> **Note:** Stage 4 is the only stage that cannot be designed around. Everything else is engineering. Stage 4 depends on how well available models handle child Quranic speech — which is what the POC is testing.
+Stage 4 risk is now Medium rather than High. The POC demonstrated Gemini handles child Quranic speech reliably across multiple surahs and recording conditions. Remaining risks are API cost, latency, and untested edge cases.
 
 ---
 
-## 5. POC status and test plan
+## 5. POC results
 
-Before any product is built, a proof-of-concept must answer one question:
+> **New section in v3.0.**
 
-> *Can any available model reliably detect whether a child said all the words in Al-Ikhlas?*
+The POC ran four passes on real child recordings of Al-Ikhlas, Al-Kawthar, and Al-Asr.
 
-If yes with reasonable reliability — proceed. If no — the pipeline needs a different approach before building anything.
+| Pass | Model | Outcome |
+|------|-------|---------|
+| A | OpenAI Whisper (no prompt) | Not tested — OpenAI project permissions blocked access |
+| B | OpenAI Whisper (prompted) | Not tested — same blocker |
+| C | tarteel-ai/whisper-base-ar-quran | Tested. Failed on all three surahs. |
+| D | Gemini 2.5 Flash | Tested. Passed on all recordings tested. |
 
-### 5.1 POC test script
+### 5.1 Pass C results (Quran-tuned model — failed)
 
-Script: `test_recitation.py` in this folder. Runs three passes on the same recording.
+| Surah | Coverage | Notes |
+|-------|----------|-------|
+| Al-Ikhlas | 31.6% | Complete gibberish for ayahs 1–2. Ayahs 3–4 partially detected. |
+| Al-Kawthar | 42.9% uncompressed | Heard something but garbled nearly every word. |
+| Al-Asr | 55.6% | Best result but hallucinated first two ayahs. |
 
-| Pass | Model | API key needed? | What it tests |
-|------|-------|-----------------|---------------|
-| A | OpenAI Whisper (no prompt) | Yes — OpenAI | Baseline: generic Arabic ASR cold |
-| B | OpenAI Whisper (prompted with surah text) | Yes — OpenAI | Effect of text constraint on accuracy |
-| C | tarteel-ai/whisper-base-ar-quran | No — runs locally | Quran-tuned model on child voice |
+**Conclusion:** Pass C is not viable. Dropped from the product architecture.
 
-Pass C downloads ~290MB on first run, cached after that. All three passes output a word coverage percentage and list any missing words.
+### 5.2 Pass D results (Gemini — passed)
 
-### 5.2 How to interpret POC results
+| Recording | Gemini verdict | Correct? |
+|-----------|---------------|----------|
+| Al-Kawthar, uncompressed | All 4 ayahs Complete, no missing words | ✓ |
+| Al-Ikhlas, no Bismillah | Bismillah Missing, ayahs 1–4 Complete | ✓ |
+| Al-Asr, clean | All 4 ayahs Complete, no missing words | ✓ |
+| Al-Ikhlas, fast recitation | Ayahs 1–4 Complete, ayah 5 Partial — 3 specific missing words flagged | ✓ |
+| Al-Asr, prompted mid-recitation | All 4 ayahs Complete — Gemini noted long pause mid-ayah 4 | ✓ |
+| Al-Kawthar, fast + out-of-order Bismillah | Ayahs 2–4 Complete, Bismillah Partial — flagged out of sequence | ✓ |
+| Al-Kafirun, skipped ayah 6 | Ayah 6 Missing, all others Complete — exact skipped text quoted | ✓ |
+| Al-Maun, multiple issues | Bismillah Missing, ayah 2 substitution caught, ayahs 6–7 Partial with specific missing words | ✓ |
+| Al-Humaza, run 1 | 8 Complete, 2 Partial — caught `مُوقَدَةُ`→`مُوَصَدَةُ` substitution missed | △ partial |
+| Al-Humaza, run 2 (same audio) | 6 Complete, 3 Partial — caught substitution + missing shadda + missing suffix | ✓ better |
 
-| Coverage | Interpretation | Next step |
-|----------|---------------|-----------|
-| 80%+ | Strong signal. Constrained matching is viable. | Test deliberately skipped ayah. If it shows as missing — the detection mechanic works. |
-| 50–80% | Partial signal. Some reliability but not enough to build on. | Try a cleaner recording. Compare which pass scored higher. |
-| Under 50% | Model is struggling with this child's voice. | Check audio quality first. If fine, the child-speech gap is a real blocker. |
+Gemini correctly handled: complete recitation, missing Bismillah, fast recitation with dropped words, long pauses, out-of-order recitation, deliberately skipped ayahs, word substitutions, and partial word omissions. On longer surahs with subtle errors, results showed some non-determinism between runs.
 
-### 5.3 The most important follow-up test
+### 5.3 Emerging result taxonomy
 
-Record a version where the child deliberately skips one ayah. Run the script again. If that ayah's words appear in the "missing" list — the core detection mechanic works and the project can move to building a UI.
+The POC revealed that Gemini naturally distinguishes between more recitation states than the original design anticipated. These should be reflected in the product's feedback model:
+
+| State | Example | Severity |
+|-------|---------|----------|
+| Complete, in order | Normal correct recitation | None — praise |
+| Complete, with pause | Child hesitated mid-ayah, needed prompting | Soft — flag for parent |
+| Complete, out of order | Bismillah said at end instead of start | Soft — note sequence |
+| Complete, with substitution | `يَحْسَبُ` recited as `أَيَحْسَبُ` — intent clear but word altered | Soft — note for teacher |
+| Partial | Specific words missing within an ayah | Hard — flag for practice |
+| Missing | Full ayah not recited | Hard — flag for practice |
+| Tajweed error | `مُوقَدَةُ` recited as `مُوَصَدَةُ` — wrong word entirely | Hard — flag for teacher |
+
+The long pause finding is particularly valuable: it surfaces cases where a child was prompted mid-recitation — something a word-coverage check alone would never catch. This should be included in the parent-facing detail even in V1.
+
+Gemini also spontaneously identifies Tajweed errors without being prompted — e.g. flagging `ض` pronounced as `د`, or a missing shadda. This is layer 2 emerging from layer 1 without additional engineering. These should be captured and surfaced to parents as "check with your teacher" items, not penalised in the main score.
+
+### 5.4 POC gates — status
+
+| Gate | Status |
+|------|--------|
+| Does Gemini correctly assess a complete recitation? | ✓ Passed — multiple surahs |
+| Does Gemini catch a missing Bismillah? | ✓ Passed |
+| Does Gemini catch dropped words mid-ayah? | ✓ Passed |
+| Does Gemini catch a deliberately skipped full ayah? | ✓ Passed — Al-Kafirun ayah 6 |
+| Does Gemini handle longer surahs (8–10 ayahs)? | ✓ Passed — Al-Humaza, Al-Maun |
+| Is Gemini consistent across multiple runs on same audio? | △ Partial — subtle errors show non-determinism |
+
+All core POC gates are passed. The POC is complete.
+
+### 5.5 Non-determinism finding
+
+Running the same Al-Humaza recording twice produced different results:
+
+- **Run 1** — caught the `مُوقَدَةُ`→`مُوَصَدَةُ` substitution in one assessment but not the other
+- **Run 2** — caught the substitution plus a missing shadda and a missing suffix
+
+This is expected LLM behaviour — Gemini is probabilistic, not deterministic. Implications for the product:
+
+- Full missing ayahs and complete/missing assessments are likely consistent across runs
+- Subtle word-level errors (especially partial word differences, single missing letters) may not be caught every time
+- For V1: surface what Gemini finds, but frame uncertain flags as "worth checking" rather than definitive errors
+- For V1+: consider running 2–3 passes on the same recording and taking a consensus for higher-confidence results
+
+### 5.6 Scoring decisions
+
+- **Ayah-level only** — the numeric score is calculated from section 2 (AYAH COVERAGE) statuses only. Word-level detail from section 3 informs the qualitative output but does not affect the number.
+- **Bismillah excluded** — Bismillah (Ayah 1) is optional. It is noted separately but not counted in the score.
+- **Scoring formula** — Complete = 1.0, Partial = 0.5, Missing = 0.0. Score = sum / scorable ayahs × 100.
 
 ---
 
 ## 6. Model landscape
 
-All available Quran ASR models were trained primarily on adult male reciters. This is a known gap in the field. The POC is the only way to determine if any of these models degrade gracefully on child speech or fail entirely.
+> **Updated in v3.1.**
 
-| Model | Type | Notes |
-|-------|------|-------|
-| openai/whisper-1 | API (paid) | General Arabic. Broad training data may help with child speech. |
-| tarteel-ai/whisper-base-ar-quran | Local (free) | Quran-tuned. 5.75% WER on adult test set. Child speech performance unknown. |
-| tarteel-ai/whisper-tiny-ar-quran | Local (free) | Smaller/faster. Worth comparing if base model is too slow. |
-| openai/whisper-large-v3 | API (paid) | Largest general Whisper. ~$0.03/min. May handle edge cases better. |
+| Model | Tested? | Result | Status |
+|-------|---------|--------|--------|
+| tarteel-ai/whisper-base-ar-quran | Yes | Failed on child speech | Dropped |
+| Gemini 2.5 Flash | Yes | Reliable across all tests | **Selected** |
+| OpenAI gpt-4o-mini-transcribe | No — access blocked | Unknown | Test if Gemini has cost/latency issues |
+| openai/whisper-large-v3 | No | Unknown | Unlikely needed given Gemini results |
 
-> **Note:** Tarteel AI does not offer a public API. Their technology is proprietary. The HuggingFace models above are open-source models trained on Tarteel's published dataset, not Tarteel's production system.
+**Audio compression note:** Compressed audio (uploaded via Google Drive) scored meaningfully lower than uncompressed (AirDrop). For production, capture audio directly in the browser and send it straight to the API — do not route through file sharing or cloud storage.
+
+**Tarteel AI note:** Tarteel does not offer a public API. The HuggingFace models are open-source models trained on Tarteel's published dataset, not Tarteel's production system.
 
 ---
 
 ## 7. What reference audio is and is not for
 
-The original PRD gave reference audio a detection role. This was revised.
+Reference audio has two legitimate uses in V1:
 
-**Reference audio has two legitimate uses in V1:**
+- **Playback UX** — child and parent can listen to a correct recitation to compare. Valuable, should be included.
+- **Duration sanity check (weak signal only)** — if a surah takes 25 seconds normally and the recording is 8 seconds, something was clearly skipped. Blunt heuristic only.
 
-- **Playback UX** — the child and parent can listen to a correct recitation to compare. This is valuable and should be included.
-- **Duration sanity check (weak signal only)** — if a surah typically takes 25 seconds and the recording is 8 seconds, something was clearly skipped. This is a blunt heuristic, not reliable detection.
-
-**Reference audio does not** reliably detect dropped ayahs or skipped words. That responsibility belongs entirely to the text layer combined with constrained ASR. Do not build detection logic that depends on acoustic comparison between child and adult audio.
+Reference audio does not reliably detect dropped ayahs or skipped words. Gemini + the expected text is the detection mechanism.
 
 ---
 
 ## 8. Scoring and feedback philosophy
 
-The system may calculate detailed internal scores, but user-facing output must stay human and supportive. Do not show percentages, grades, or pass/fail labels to the child.
+The system may calculate detailed internal scores but user-facing output must stay human and supportive. Do not show percentages, grades, or pass/fail labels to the child.
 
 ### 8.1 Hard issues (affect main result)
 
 - Missing ayah
 - Missing word
-- Added word not in the surah
-- Substituted word
 - Stopping before the surah is complete
 
 ### 8.2 Soft issues (flag for review, do not penalize heavily)
 
+- Partial ayah (some words present, some missing)
 - Unclear pronunciation
-- Possible articulation issue
-- Long pause or hesitation
+- Very fast recitation that may have dropped words
 - Low audio quality
-- Segment too noisy to assess confidently
 
 ### 8.3 Output language
 
@@ -192,20 +247,50 @@ The system may calculate detailed internal scores, but user-facing output must s
 | 3.5 / 5 | "Great effort. Let's practice these small parts." |
 | Failed | "Nice try. Let's listen and try again." |
 | Word error rate: 3 | "A few words to check — listen here." |
+| Ayah 5: Partial | "Almost! Let's go over the last part together." |
 
 ---
 
 ## 9. Open questions
 
-Unresolved as of March 2026. Should be answered before V1 is built, not during.
+> **Updated in v3.0. Several v2.0 questions are now answered.**
+
+**Answered by the POC:**
+- ~~Does constrained Whisper reliably detect dropped ayahs?~~ → No. Gemini is the approach.
+- ~~Which model to use?~~ → Gemini 2.5 Flash.
+- ~~Does audio compression matter?~~ → Yes. Capture directly in browser, not via file sharing.
+- ~~Does Gemini catch a deliberately skipped full ayah?~~ → Yes, correctly flagged and quoted the missing text.
+- ~~Does Gemini work on longer surahs (8–10 ayahs)?~~ → Yes, tested on Al-Humaza and Al-Maun.
+
+**Still open — must answer before V1 build:**
 
 | Question | Why it matters |
 |----------|---------------|
-| Does constrained Whisper reliably detect dropped ayahs on this child's voice? | The entire pipeline depends on this. Only the POC can answer it. |
-| Full-surah recording only, or ayah-by-ayah mode? | Ayah-by-ayah is more forgiving of segmentation issues but changes the UX significantly. |
-| What minimum audio quality should trigger a re-record prompt? | Too sensitive = frustrating. Too lenient = garbage in, garbage out. |
-| How should parent prompting in the background be handled? | A parent whispering the next word will confuse the model. Needs a mitigation. |
-| Browser recording, file upload, or both? | Browser recording is simpler UX but has quality/permission issues on some devices. |
+| ~~Does Gemini correctly flag a deliberately skipped full ayah?~~ | ✓ Answered — yes, caught and quoted the missing text. |
+| How consistent is Gemini across multiple runs on the same recording? | Non-determinism observed on subtle errors. Run 2–3 passes for higher confidence. |
+| What is the Gemini API cost per recitation attempt? | Need to model cost before committing to architecture. |
+| What is Gemini response latency on a short surah? | If 10+ seconds, UX needs a loading state and expectation setting. |
+| Should Bismillah always be expected? | Some children omit it. Currently flagged as missing. Needs a decision. |
+| Full-surah recording only, or ayah-by-ayah mode? | Ayah-by-ayah changes UX significantly but may reduce scope per API call. |
+| What minimum audio quality triggers a re-record prompt? | Too sensitive = frustrating. Too lenient = garbage in. |
+| How should long pauses be surfaced to parents? | POC showed Gemini detects them. Needs a UX decision on how to present this. |
+| Browser recording, file upload, or both for V1? | Browser recording is simpler but has quality/permission issues on some devices. |
+
+**Eval framework — tracked separately:**
+
+The POC has produced a small set of recordings with known ground truth. These should be formalised into an eval set before V1 build begins. The goal is to be able to run any prompt change or model change against the full set and immediately see whether things regressed.
+
+The eval set needs at minimum:
+- 2–3 complete correct recitations per surah (different speeds, styles)
+- 1 recording with a missing Bismillah per surah
+- 1 recording with a deliberately skipped full ayah per surah
+- 1 recording with partial ayah (words dropped mid-ayah)
+- 1 recording with out-of-order content
+- 1 noisy or low-quality recording (quality gate test)
+
+The eval script should run all recordings through Pass D, compare Gemini's output against the known ground truth, and report a pass/fail per recording. This creates a regression harness: if a prompt change causes a previously-passing recording to fail, you know immediately.
+
+LLM-as-judge is a viable approach here — use Claude or Gemini to automatically score Gemini's output against ground truth and produce a structured report. The expected outputs are well-defined enough to make automated scoring reliable.
 
 ---
 
@@ -217,37 +302,36 @@ Unresolved as of March 2026. Should be answered before V1 is built, not during.
 - More than 36 surahs
 - Multi-child support
 - Cloud storage of recordings
-- Integration with Surah Mission Control data (separate product, may connect later)
+- Integration with Surah Mission Control data (may connect later)
 
 ---
 
 ## 11. Relationship to Surah Mission Control
 
-Surah Mission Control is a memorization tracker. This product is a recitation practice aid. They are related but separate.
-
 | | Surah Mission Control | Recitation Practice Aid |
 |--|----------------------|------------------------|
 | Purpose | Track memorization progress | Practice recitation between sessions |
 | Primary user | Child + parent | Child (parent reviews results) |
-| Tech stack | Single HTML file, localStorage | Python pipeline, ASR APIs |
-| Data | Device-local only | Audio files, transcripts (TBD) |
-| Status | Live, has users | POC phase |
+| Tech stack | Single HTML file, localStorage | Gemini API, browser audio capture |
+| Data | Device-local only | Audio sent to Gemini API, not stored |
+| Status | Live, has users | POC complete, pre-build |
 | Repo | surah-tracker / surah-tracker-staging | recitation-poc/ in staging |
 
-These may eventually connect — for example, a recitation result could update the Re-test dots on a Mission Control card. That integration is not in scope for V1 of either product.
+These may eventually connect — for example, a recitation result could update the Re-test dots on a Mission Control card. Not in scope for V1 of either product.
 
 ---
 
 ## 12. Immediate next steps
 
-1. Record the child reciting Al-Ikhlas on the iPad (Voice Memos, quiet room)
-2. AirDrop to computer, run `test_recitation.py` with the recording
-3. Read the coverage output for all three passes
-4. Record a second version where the child deliberately skips ayah 3
-5. Run the same script — confirm whether the missing ayah is detected
-6. If detection works: begin designing the child-facing recording UI
-7. If detection fails: evaluate whisper-large-v3 and assess whether the child-speech gap is a blocker
+> **Updated in v3.1.**
+
+1. **Run the skipped-ayah test** — record Kawthar where the child skips ayah 2 entirely. Run Pass D. Confirm Gemini flags it as Missing. This is the last POC gate before building.
+2. **Fix the numeric scoring** — rewrite the coverage score parser to extract ayah status from Gemini's structured output properly rather than counting words in the response text.
+3. **Measure cost and latency** — run 10 requests against the Gemini API and log response time and token cost per request.
+4. **Harden the Gemini prompt** — define an exact output format (structured JSON or consistent markdown) so results can be parsed reliably rather than interpreted from natural language.
+5. **Decide on Bismillah handling** — whether to always expect it, make it optional, or exclude it from scoring entirely.
+6. **Design the recording UI** — single screen: surah selector, record button, playback before submit, results view. Child-first, large touch targets, Arabic text display.
 
 ---
 
-*Quran Recitation Practice Aid — PRD v2.0 — March 2026*
+*Quran Recitation Practice Aid — PRD v3.0 — March 2026*
