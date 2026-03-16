@@ -25,3 +25,5 @@ env/
 # OS clutter
 .DS_Store
 Thumbs.db
+# Per-surah result logs
+results/
