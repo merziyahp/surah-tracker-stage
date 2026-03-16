@@ -425,7 +425,11 @@ Listen carefully to the audio recording and provide the following:
 
 5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
 
-Be lenient with pronunciation — focus on whether words and ayahs were present. The child may speak quickly, softly, or stretch words for emphasis.
+Accuracy guidelines:
+- Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
+- Be lenient only on natural child speech variations: soft voice, stretched vowels, slight accent.
+- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or dropped word endings that change meaning.
+- If uncertain whether a word was said, mark it as unclear rather than assuming Complete.
 
 Full expected text: ${current.ayahs.join(' ')}`;
 
@@ -435,7 +439,8 @@ Full expected text: ${current.ayahs.join(' ')}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: blob.type || 'audio/webm', data: b64 } }] }]
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: blob.type || 'audio/webm', data: b64 } }] }],
+          generationConfig: { temperature: 0.1, topP: 0.9 }
         })
       }
     );
