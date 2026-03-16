@@ -507,7 +507,11 @@ Listen carefully to the audio recording and provide the following:
 
 5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
 
-Be lenient with pronunciation — focus on whether words and ayahs were present. The child may speak quickly, softly, or stretch words for emphasis.
+Accuracy guidelines:
+- Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
+- Be lenient only on natural child speech variations: soft voice, stretched vowels, slight accent.
+- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or dropped word endings that change meaning.
+- If uncertain whether a word was said, mark it as unclear rather than assuming Complete.
 
 Expected full text for reference: {full_text}"""
 
@@ -530,6 +534,10 @@ Expected full text for reference: {full_text}"""
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[prompt, audio_file],
+            config={
+                "temperature": 0.1,  # Low temperature for consistency and accuracy
+                "top_p": 0.9,
+            }
         )
         assessment = response.text.strip()
     except Exception as e:
@@ -725,21 +733,56 @@ def run_poc(audio_path, surah_key, skip_openai, skip_gemini=False, skip_tarteel=
 
     print_summary(result_a, result_b, result_c, result_d)
 
-    output = {
+    import datetime as _dt
+    entry = {
+        "timestamp": _dt.datetime.now().isoformat(),
         "surah": surah["name"],
         "audio": audio_path,
-        "expected_words": expected_words,
         "pass_a": result_a,
         "pass_b": result_b,
         "pass_c": result_c,
         "pass_d": result_d,
     }
 
-    out_path = "poc_results.json"
+    # One log file per surah — each run appends a new entry
+    # When a file exceeds MAX_FILE_SIZE_KB, it gets archived and a new file starts
+    MAX_FILE_SIZE_KB = 500
+    out_path = f"results_{surah_key}.json"
+    results_dir = "results"
+
     try:
+        os.makedirs(results_dir, exist_ok=True)
+        out_path = os.path.join(results_dir, f"results_{surah_key}.json")
+
+        # Load existing entries if file exists
+        entries = []
+        if os.path.exists(out_path):
+            # Archive if file is getting large
+            size_kb = os.path.getsize(out_path) / 1024
+            if size_kb >= MAX_FILE_SIZE_KB:
+                archive_path = os.path.join(
+                    results_dir,
+                    f"results_{surah_key}_{_dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
+                os.rename(out_path, archive_path)
+                print(f"\n  Log archived to: {archive_path}")
+                entries = []
+            else:
+                try:
+                    with open(out_path, "r", encoding="utf-8") as f:
+                        entries = json.load(f)
+                    if not isinstance(entries, list):
+                        entries = [entries]  # migrate old single-entry files
+                except Exception:
+                    entries = []
+
+        entries.append(entry)
+
         with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(output, f, ensure_ascii=False, indent=2)
-        print(f"\n  Full results saved to: {out_path}")
+            json.dump(entries, f, ensure_ascii=False, indent=2)
+
+        print(f"\n  Result logged to : {out_path}  ({len(entries)} total runs)")
+
     except Exception as e:
         print(f"\n  WARNING — Could not save results file: {e}")
 
