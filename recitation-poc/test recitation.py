@@ -31,6 +31,15 @@ import traceback
 # ---------------------------------------------------------------------------
 BISMILLAH = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ"
 
+# ---------------------------------------------------------------------------
+# Model configuration — change these to adjust model behaviour
+# ---------------------------------------------------------------------------
+MODEL_GEMINI_PRIMARY   = "gemini-2.5-flash"
+MODEL_GEMINI_LITE      = "gemini-2.0-flash"
+MODEL_CLAUDE           = "claude-haiku-4-5"
+TEMPERATURE            = 0.1
+TOP_P                  = 0.9
+
 SURAHS = {
     "fatiha": {
         "name": "Al-Fatiha (1)",
@@ -450,6 +459,99 @@ def run_tarteel_pass(audio_path, expected_words):
 
 
 # ---------------------------------------------------------------------------
+# Shared helpers for multimodal passes (D, E, F)
+# ---------------------------------------------------------------------------
+
+def _build_prompt(surah, ayah_list, full_text):
+    """Shared prompt for all multimodal assessment passes."""
+    return f"""You are a warm, experienced Quran teacher giving feedback after a child's recitation practice session.
+You are speaking to the parent, with a final note directed at the child.
+
+The child was supposed to recite {surah['name']}.
+The expected Arabic text is:
+
+{ayah_list}
+
+Note: Ayah 0 is the Bismillah. It is optional — if the child did not recite it, mark it as Optional rather than Missing and do not treat it as an error.
+
+Listen carefully to the audio recording and provide the following:
+
+1. TRANSCRIPT: What you heard, written in Arabic script.
+
+2. AYAH COVERAGE: For each ayah, state Complete, Partial, or Missing.
+   Use natural teacher language in your notes — e.g. "came through clearly" or "stumbled a little here".
+
+3. WORDS TO WORK ON: Any specific words that were missing, substituted, or unclear — phrased as gentle guidance. E.g. "The word X wasn't quite there — worth drilling this one."
+
+4. FOR THE PARENT: 2-3 sentences as a teacher speaking to a parent after class. What went well, what to focus on at home, any patterns worth noting (hesitations, rushing, prompting needed). Honest but encouraging.
+
+5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
+
+Accuracy guidelines:
+- Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
+- Be lenient only on natural child speech variations: soft voice, stretched vowels, slight accent.
+- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or dropped word endings that change meaning.
+- If uncertain whether a word was said, mark it as unclear rather than assuming Complete.
+
+Full expected text for reference: {full_text}"""
+
+
+def _parse_coverage(assessment, surah):
+    """
+    Parse AYAH COVERAGE section from Gemini/Claude response.
+    Returns (score, complete, partial, missing, bismillah_status).
+    Bismillah (Ayah 0) is excluded from scoring.
+    """
+    import re as _re
+
+    lines = assessment.split("\n")
+    ayah_statuses = {}
+    in_coverage = False
+    for line in lines:
+        if "AYAH COVERAGE" in line.upper():
+            in_coverage = True
+            continue
+        if in_coverage:
+            if _re.match(r"\s*\*{{0,2}}\s*\d+\.\s+[A-Z]", line) and "Ayah" not in line:
+                break
+            m = _re.search(r"Ayah\s+(\d+)", line, _re.IGNORECASE)
+            if m:
+                n = int(m.group(1))
+                l = line.lower()
+                if "complete" in l:   ayah_statuses[n] = "complete"
+                elif "partial" in l:  ayah_statuses[n] = "partial"
+                elif "missing" in l:  ayah_statuses[n] = "missing"
+                elif "optional" in l or "skipped" in l: ayah_statuses[n] = "optional"
+
+    scoring_statuses = {{n: s for n, s in ayah_statuses.items()
+                         if n != 0 and s != "optional"}}
+    ayah_count_scored = len(surah["ayahs"]) - 1
+
+    complete = sum(1 for s in scoring_statuses.values() if s == "complete")
+    partial  = sum(1 for s in scoring_statuses.values() if s == "partial")
+    missing  = sum(1 for s in scoring_statuses.values() if s == "missing")
+
+    # Fallback if section not found
+    if complete + partial + missing == 0:
+        for line in lines:
+            l = line.lower()
+            m = _re.search(r"ayah\s+(\d+)", l)
+            if m and int(m.group(1)) != 0:
+                if "complete" in l: complete += 1
+                elif "partial" in l: partial += 1
+                elif "missing" in l: missing += 1
+
+    total = complete + partial + missing
+    if total > 0:
+        score = min(round(((complete * 1.0) + (partial * 0.5)) / ayah_count_scored * 100, 1), 100.0)
+    else:
+        score = None
+
+    bismillah_status = ayah_statuses.get(0, "not recited")
+    return score, complete, partial, missing, bismillah_status
+
+
+# ---------------------------------------------------------------------------
 # Pass D — Gemini (audio + expected text → direct assessment)
 # ---------------------------------------------------------------------------
 
@@ -532,11 +634,11 @@ Expected full text for reference: {full_text}"""
     print("  Sending to Gemini for assessment...")
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=MODEL_GEMINI_PRIMARY,
             contents=[prompt, audio_file],
             config={
-                "temperature": 0.1,  # Low temperature for consistency and accuracy
-                "top_p": 0.9,
+                "temperature": TEMPERATURE,
+                "top_p": TOP_P,
             }
         )
         assessment = response.text.strip()
@@ -633,6 +735,198 @@ Expected full text for reference: {full_text}"""
         pass
 
     return {
+        "model": MODEL_GEMINI_PRIMARY,
+        "temperature": TEMPERATURE,
+        "assessment": assessment,
+        "coverage_estimate": score,
+        "ayah_breakdown": {"complete": complete, "partial": partial, "missing": missing},
+    }
+
+
+# ---------------------------------------------------------------------------
+# Pass E — Gemini Flash Lite (cheaper Gemini, same approach as Pass D)
+# ---------------------------------------------------------------------------
+
+def run_gemini_lite_pass(audio_path, surah, expected_words):
+    print_section(f"Pass E — {MODEL_GEMINI_LITE} (cheaper Gemini)")
+
+    try:
+        from google import genai
+    except ImportError:
+        print("\n  ERROR — google-genai package not installed.")
+        print("  Fix: pip install google-genai")
+        return None
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("\n  ERROR — GEMINI_API_KEY not set.")
+        print("  Fix: export GEMINI_API_KEY=your_key_here")
+        return None
+
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        print(f"\n  ERROR — Could not create Gemini client: {e}")
+        return None
+
+    ayah_list = "\n".join(
+        f"  Ayah {'0' if i == 0 else i}: {ayah}"
+        for i, ayah in enumerate(surah["ayahs"])
+    )
+    full_text = get_full_text(surah)
+    prompt = _build_prompt(surah, ayah_list, full_text)
+
+    print(f"  Uploading audio to Gemini Lite...")
+    try:
+        audio_file = client.files.upload(file=audio_path)
+    except Exception as e:
+        print(f"\n  ERROR — Could not upload audio: {e}")
+        traceback.print_exc()
+        return None
+
+    print("  Sending to Gemini Lite for assessment...")
+    try:
+        response = client.models.generate_content(
+            model=MODEL_GEMINI_LITE,
+            contents=[prompt, audio_file],
+            config={"temperature": TEMPERATURE, "top_p": TOP_P}
+        )
+        assessment = response.text.strip()
+    except Exception as e:
+        print(f"\n  ERROR — Gemini Lite request failed.")
+        print(f"  Detail: {e}")
+        if "quota" in str(e).lower():
+            print("  Fix: free tier quota exceeded. Wait a minute and retry.")
+        else:
+            traceback.print_exc()
+        return None
+
+    print(f"\n  Gemini Lite assessment:\n")
+    for line in assessment.split("\n"):
+        print(f"    {line}")
+
+    score, complete, partial, missing, bismillah_status = _parse_coverage(assessment, surah)
+
+    if score is not None:
+        print(f"\n  Coverage : {score}%  ({complete} complete, {partial} partial, {missing} missing / {len(surah['ayahs'])-1} ayahs)")
+        print(f"  Bismillah     : {bismillah_status}")
+    else:
+        print("\n  (Could not parse ayah coverage — check assessment above)")
+
+    try:
+        client.files.delete(name=audio_file.name)
+    except Exception:
+        pass
+
+    return {
+        "model": MODEL_GEMINI_LITE,
+        "temperature": TEMPERATURE,
+        "assessment": assessment,
+        "coverage_estimate": score,
+        "ayah_breakdown": {"complete": complete, "partial": partial, "missing": missing},
+    }
+
+
+# ---------------------------------------------------------------------------
+# Pass F — Claude Haiku (Anthropic multimodal)
+# ---------------------------------------------------------------------------
+
+def run_claude_pass(audio_path, surah, expected_words):
+    print_section(f"Pass F — {MODEL_CLAUDE} (Anthropic)")
+
+    try:
+        import anthropic
+    except ImportError:
+        print("\n  ERROR — anthropic package not installed.")
+        print("  Fix: pip install anthropic")
+        return None
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("\n  ERROR — ANTHROPIC_API_KEY not set.")
+        print("  Fix: export ANTHROPIC_API_KEY=your_key_here")
+        print("  Get a key at: https://console.anthropic.com")
+        return None
+
+    ayah_list = "\n".join(
+        f"  Ayah {'0' if i == 0 else i}: {ayah}"
+        for i, ayah in enumerate(surah["ayahs"])
+    )
+    full_text = get_full_text(surah)
+    prompt = _build_prompt(surah, ayah_list, full_text)
+
+    # Read and encode audio file
+    print(f"  Reading audio: {audio_path}")
+    try:
+        import base64
+        with open(audio_path, "rb") as f:
+            audio_data = base64.standard_b64encode(f.read()).decode("utf-8")
+        # Determine media type
+        ext = audio_path.rsplit(".", 1)[-1].lower()
+        media_type_map = {
+            "mp3": "audio/mpeg", "wav": "audio/wav", "webm": "audio/webm",
+            "m4a": "audio/mp4", "ogg": "audio/ogg", "flac": "audio/flac",
+        }
+        media_type = media_type_map.get(ext, "audio/mpeg")
+    except Exception as e:
+        print(f"\n  ERROR — Could not read audio file: {e}")
+        return None
+
+    print("  Sending to Claude for assessment...")
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model=MODEL_CLAUDE,
+            max_tokens=2048,
+            temperature=TEMPERATURE,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt,
+                    },
+                    {
+                        "type": "document",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": audio_data,
+                        },
+                    }
+                ]
+            }]
+        )
+        assessment = message.content[0].text.strip()
+    except anthropic.AuthenticationError:
+        print("\n  ERROR — Anthropic API key invalid or expired.")
+        print("  Fix: check key at https://console.anthropic.com")
+        return None
+    except anthropic.RateLimitError:
+        print("\n  ERROR — Anthropic rate limit hit.")
+        print("  Fix: wait a moment and retry.")
+        return None
+    except Exception as e:
+        print(f"\n  ERROR — Claude request failed.")
+        print(f"  Detail: {e}")
+        traceback.print_exc()
+        return None
+
+    print(f"\n  Claude assessment:\n")
+    for line in assessment.split("\n"):
+        print(f"    {line}")
+
+    score, complete, partial, missing, bismillah_status = _parse_coverage(assessment, surah)
+
+    if score is not None:
+        print(f"\n  Coverage : {score}%  ({complete} complete, {partial} partial, {missing} missing / {len(surah['ayahs'])-1} ayahs)")
+        print(f"  Bismillah     : {bismillah_status}")
+    else:
+        print("\n  (Could not parse ayah coverage — check assessment above)")
+
+    return {
+        "model": MODEL_CLAUDE,
+        "temperature": TEMPERATURE,
         "assessment": assessment,
         "coverage_estimate": score,
         "ayah_breakdown": {"complete": complete, "partial": partial, "missing": missing},
@@ -643,14 +937,16 @@ Expected full text for reference: {full_text}"""
 # Summary
 # ---------------------------------------------------------------------------
 
-def print_summary(result_a, result_b, result_c, result_d):
+def print_summary(result_a, result_b, result_c, result_d, result_e=None, result_f=None):
     print_section("Summary")
 
     passes = [
-        ("Pass A — Whisper, no prompt  ", result_a),
-        ("Pass B — Whisper, with prompt", result_b),
-        ("Pass C — Quran-tuned (local) ", result_c),
-        ("Pass D — Gemini assessment   ", result_d),
+        ("Pass A — Whisper, no prompt     ", result_a),
+        ("Pass B — Whisper, with prompt   ", result_b),
+        ("Pass C — Quran-tuned (local)    ", result_c),
+        (f"Pass D — {MODEL_GEMINI_PRIMARY:<22}", result_d),
+        (f"Pass E — {MODEL_GEMINI_LITE:<22}", result_e),
+        (f"Pass F — {MODEL_CLAUDE:<22}", result_f),
     ]
 
     any_completed = False
@@ -694,7 +990,17 @@ def print_summary(result_a, result_b, result_c, result_d):
 # Entry point
 # ---------------------------------------------------------------------------
 
-def run_poc(audio_path, surah_key, skip_openai, skip_gemini=False, skip_tarteel=False):
+PASS_DESCRIPTIONS = {
+    "a": "OpenAI Whisper (no prompt)",
+    "b": "OpenAI Whisper (prompted)",
+    "c": "tarteel-ai/whisper-base-ar-quran (local)",
+    "d": f"Gemini {MODEL_GEMINI_PRIMARY}",
+    "e": f"Gemini {MODEL_GEMINI_LITE} (2.0)",
+    "f": f"Claude {MODEL_CLAUDE}",
+}
+
+
+def run_poc(audio_path, surah_key, passes):
     if not os.path.exists(audio_path):
         print(f"\nERROR — Audio file not found: {audio_path}")
         print("  Check the path and try again.")
@@ -705,6 +1011,13 @@ def run_poc(audio_path, surah_key, skip_openai, skip_gemini=False, skip_tarteel=
         print(f"  Available: {', '.join(SURAHS.keys())}")
         sys.exit(1)
 
+    if not passes:
+        print("\nERROR — No passes selected. Specify at least one with --run-X.")
+        print("\nAvailable passes:")
+        for k, v in PASS_DESCRIPTIONS.items():
+            print(f"  --run-{k}  {v}")
+        sys.exit(1)
+
     surah = SURAHS[surah_key]
     expected_words = get_all_words(surah)
 
@@ -712,36 +1025,33 @@ def run_poc(audio_path, surah_key, skip_openai, skip_gemini=False, skip_tarteel=
     print(f"   Surah  : {surah['name']}")
     print(f"   Audio  : {audio_path}")
     print(f"   Words  : {len(expected_words)} expected across {len(surah['ayahs'])} ayahs")
+    print(f"   Passes : {', '.join(passes.upper() for passes in sorted(passes))}")
 
     result_a, result_b = None, None
-    if skip_openai:
-        print("\n  Skipping Passes A & B (--skip-openai flag set).")
-    else:
+    if "a" in passes or "b" in passes:
         result_a, result_b = run_openai_passes(audio_path, surah, expected_words)
+        if "a" not in passes: result_a = None
+        if "b" not in passes: result_b = None
 
-    result_c = None
-    if skip_tarteel:
-        print("\n  Skipping Pass C (--skip-tarteel flag set).")
-    else:
-        result_c = run_tarteel_pass(audio_path, expected_words)
+    result_c = run_tarteel_pass(audio_path, expected_words) if "c" in passes else None
+    result_d = run_gemini_pass(audio_path, surah, expected_words) if "d" in passes else None
+    result_e = run_gemini_lite_pass(audio_path, surah, expected_words) if "e" in passes else None
+    result_f = run_claude_pass(audio_path, surah, expected_words) if "f" in passes else None
 
-    result_d = None
-    if skip_gemini:
-        print("\n  Skipping Pass D (--skip-gemini flag set).")
-    else:
-        result_d = run_gemini_pass(audio_path, surah, expected_words)
-
-    print_summary(result_a, result_b, result_c, result_d)
+    print_summary(result_a, result_b, result_c, result_d, result_e, result_f)
 
     import datetime as _dt
     entry = {
         "timestamp": _dt.datetime.now().isoformat(),
         "surah": surah["name"],
         "audio": audio_path,
+        "passes_run": sorted(passes),
         "pass_a": result_a,
         "pass_b": result_b,
         "pass_c": result_c,
         "pass_d": result_d,
+        "pass_e": result_e,
+        "pass_f": result_f,
     }
 
     # One log file per surah — each run appends a new entry
@@ -788,11 +1098,40 @@ def run_poc(audio_path, surah_key, skip_openai, skip_gemini=False, skip_tarteel=
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Recitation POC — word coverage test")
+    parser = argparse.ArgumentParser(
+        description="Recitation POC — word coverage test",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Passes (specify one or more with --run-X):
+  --run-a   OpenAI Whisper, no prompt        (requires OPENAI_API_KEY)
+  --run-b   OpenAI Whisper, prompted         (requires OPENAI_API_KEY)
+  --run-c   tarteel-ai/whisper-base-ar-quran (local, no key needed, ~290MB download)
+  --run-d   Gemini 2.5 Flash                 (requires GEMINI_API_KEY) ← recommended
+  --run-e   Gemini 2.0 Flash Lite            (requires GEMINI_API_KEY, cheaper)
+  --run-f   Claude Haiku                     (requires ANTHROPIC_API_KEY)
+
+Examples:
+  python3 test_recitation.py --audio recording.mp3 --surah ikhlas --run-d
+  python3 test_recitation.py --audio recording.mp3 --surah kawthar --run-d --run-e --run-f
+  python3 test_recitation.py --audio recording.mp3 --surah humaza --run-d --run-e
+        """
+    )
     parser.add_argument("--audio", required=True, help="Path to audio file (m4a, mp3, wav, webm)")
-    parser.add_argument("--surah", default="ikhlas", help="Surah to test: fatiha, asr, humaza, fil, quraysh, maun, kawthar, kafirun, nasr, masad, ikhlas, falaq, nas")
-    parser.add_argument("--skip-openai", action="store_true", help="Skip Passes A & B (no OpenAI API key needed)")
-    parser.add_argument("--skip-tarteel", action="store_true", help="Skip Pass C (no local model download needed)")
-    parser.add_argument("--skip-gemini", action="store_true", help="Skip Pass D (no Gemini API key needed)")
+    parser.add_argument("--surah", default="ikhlas", help="Surah key: fatiha, asr, humaza, fil, quraysh, maun, kawthar, kafirun, nasr, masad, ikhlas, falaq, nas")
+    parser.add_argument("--run-a", action="store_true", help="Run Pass A: OpenAI Whisper no prompt")
+    parser.add_argument("--run-b", action="store_true", help="Run Pass B: OpenAI Whisper prompted")
+    parser.add_argument("--run-c", action="store_true", help="Run Pass C: tarteel-ai local model")
+    parser.add_argument("--run-d", action="store_true", help="Run Pass D: Gemini 2.5 Flash (recommended)")
+    parser.add_argument("--run-e", action="store_true", help="Run Pass E: Gemini 2.0 Flash Lite (cheaper)")
+    parser.add_argument("--run-f", action="store_true", help="Run Pass F: Claude Haiku")
     args = parser.parse_args()
-    run_poc(args.audio, args.surah, args.skip_openai, args.skip_gemini, args.skip_tarteel)
+
+    passes = set()
+    if args.run_a: passes.add("a")
+    if args.run_b: passes.add("b")
+    if args.run_c: passes.add("c")
+    if args.run_d: passes.add("d")
+    if args.run_e: passes.add("e")
+    if args.run_f: passes.add("f")
+
+    run_poc(args.audio, args.surah, passes)
