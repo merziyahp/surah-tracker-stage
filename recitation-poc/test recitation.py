@@ -476,7 +476,7 @@ Note: Ayah 0 is the Bismillah. It is optional — if the child did not recite it
 
 Listen carefully to the audio recording and provide the following:
 
-1. TRANSCRIPT: What you heard, written in Arabic script.
+1. TRANSCRIPT: What you heard, written in Arabic script. (This section only should be in Arabic.)
 
 2. AYAH COVERAGE: For each ayah, state Complete, Partial, or Missing.
    Use natural teacher language in your notes — e.g. "came through clearly" or "stumbled a little here".
@@ -486,6 +486,8 @@ Listen carefully to the audio recording and provide the following:
 4. FOR THE PARENT: 2-3 sentences as a teacher speaking to a parent after class. What went well, what to focus on at home, any patterns worth noting (hesitations, rushing, prompting needed). Honest but encouraging.
 
 5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
+
+Important: Respond entirely in English except for Arabic Quranic text when quoting specific words or ayahs.
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
@@ -598,7 +600,7 @@ Note: Ayah 0 is the Bismillah. It is optional — if the child did not recite it
 
 Listen carefully to the audio recording and provide the following:
 
-1. TRANSCRIPT: What you heard, written in Arabic script.
+1. TRANSCRIPT: What you heard, written in Arabic script. (This section only should be in Arabic.)
 
 2. AYAH COVERAGE: For each ayah, state Complete, Partial, or Missing.
    Use natural teacher language in your notes — e.g. "good, came through clearly" or "stumbled a little here" rather than clinical descriptions.
@@ -608,6 +610,8 @@ Listen carefully to the audio recording and provide the following:
 4. FOR THE PARENT: 2-3 sentences as a teacher speaking to a parent after class. What went well, what to focus on at home, any patterns worth noting (hesitations, rushing, prompting needed). Honest but encouraging.
 
 5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
+
+Important: Respond entirely in English except for Arabic Quranic text when quoting specific words or ayahs.
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
