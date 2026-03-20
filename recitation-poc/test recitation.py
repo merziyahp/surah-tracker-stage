@@ -53,6 +53,211 @@ SURAHS = {
             "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
         ],
     },
+    "shams": {
+        "name": "Al-Shams (91)",
+        "ayahs": [
+            BISMILLAH,
+            "وَالشَّمْسِ وَضُحَاهَا",
+            "وَالْقَمَرِ إِذَا تَلَاهَا",
+            "وَالنَّهَارِ إِذَا جَلَّاهَا",
+            "وَاللَّيْلِ إِذَا يَغْشَاهَا",
+            "وَالسَّمَاءِ وَمَا بَنَاهَا",
+            "وَالْأَرْضِ وَمَا طَحَاهَا",
+            "وَنَفْسٍ وَمَا سَوَّاهَا",
+            "فَأَلْهَمَهَا فُجُورَهَا وَتَقْوَاهَا",
+            "قَدْ أَفْلَحَ مَن زَكَّاهَا",
+            "وَقَدْ خَابَ مَن دَسَّاهَا",
+            "كَذَّبَتْ ثَمُودُ بِطَغْوَاهَا",
+            "إِذِ انبَعَثَ أَشْقَاهَا",
+            "فَقَالَ لَهُمْ رَسُولُ اللَّهِ نَاقَةَ اللَّهِ وَسُقْيَاهَا",
+            "فَكَذَّبُوهُ فَعَقَرُوهَا فَدَمْدَمَ عَلَيْهِمْ رَبُّهُم بِذَنبِهِمْ فَسَوَّاهَا",
+            "وَلَا يَخَافُ عُقْبَاهَا",
+        ],
+    },
+    "layl": {
+        "name": "Al-Layl (92)",
+        "ayahs": [
+            BISMILLAH,
+            "وَاللَّيْلِ إِذَا يَغْشَى",
+            "وَالنَّهَارِ إِذَا تَجَلَّى",
+            "وَمَا خَلَقَ الذَّكَرَ وَالْأُنثَى",
+            "إِنَّ سَعْيَكُمْ لَشَتَّى",
+            "فَأَمَّا مَنْ أَعْطَى وَاتَّقَى",
+            "وَصَدَّقَ بِالْحُسْنَى",
+            "فَسَنُيَسِّرُهُ لِلْيُسْرَى",
+            "وَأَمَّا مَن بَخِلَ وَاسْتَغْنَى",
+            "وَكَذَّبَ بِالْحُسْنَى",
+            "فَسَنُيَسِّرُهُ لِلْعُسْرَى",
+            "وَمَا يُغْنِي عَنْهُ مَالُهُ إِذَا تَرَدَّى",
+            "إِنَّ عَلَيْنَا لَلْهُدَى",
+            "وَإِنَّ لَنَا لَلْآخِرَةَ وَالْأُولَى",
+            "فَأَنذَرْتُكُمْ نَارًا تَلَظَّى",
+            "لَا يَصْلَاهَا إِلَّا الْأَشْقَى",
+            "الَّذِي كَذَّبَ وَتَوَلَّى",
+            "وَسَيُجَنَّبُهَا الْأَتْقَى",
+            "الَّذِي يُؤْتِي مَالَهُ يَتَزَكَّى",
+            "وَمَا لِأَحَدٍ عِندَهُ مِن نِّعْمَةٍ تُجْزَى",
+            "إِلَّا ابْتِغَاءَ وَجْهِ رَبِّهِ الْأَعْلَى",
+            "وَلَسَوْفَ يَرْضَى",
+        ],
+    },
+    "duha": {
+        "name": "Al-Duha (93)",
+        "ayahs": [
+            BISMILLAH,
+            "وَالضُّحَى",
+            "وَاللَّيْلِ إِذَا سَجَى",
+            "مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَى",
+            "وَلَلْآخِرَةُ خَيْرٌ لَّكَ مِنَ الْأُولَى",
+            "وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَى",
+            "أَلَمْ يَجِدْكَ يَتِيمًا فَآوَى",
+            "وَوَجَدَكَ ضَالًّا فَهَدَى",
+            "وَوَجَدَكَ عَائِلًا فَأَغْنَى",
+            "فَأَمَّا الْيَتِيمَ فَلَا تَقْهَرْ",
+            "وَأَمَّا السَّائِلَ فَلَا تَنْهَرْ",
+            "وَأَمَّا بِنِعْمَةِ رَبِّكَ فَحَدِّثْ",
+        ],
+    },
+    "sharh": {
+        "name": "Al-Sharh (94)",
+        "ayahs": [
+            BISMILLAH,
+            "أَلَمْ نَشْرَحْ لَكَ صَدْرَكَ",
+            "وَوَضَعْنَا عَنكَ وِزْرَكَ",
+            "الَّذِي أَنقَضَ ظَهْرَكَ",
+            "وَرَفَعْنَا لَكَ ذِكْرَكَ",
+            "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا",
+            "إِنَّ مَعَ الْعُسْرِ يُسْرًا",
+            "فَإِذَا فَرَغْتَ فَانصَبْ",
+            "وَإِلَى رَبِّكَ فَارْغَب",
+        ],
+    },
+    "tin": {
+        "name": "Al-Tin (95)",
+        "ayahs": [
+            BISMILLAH,
+            "وَالتِّينِ وَالزَّيْتُونِ",
+            "وَطُورِ سِينِينَ",
+            "وَهَذَا الْبَلَدِ الْأَمِينِ",
+            "لَقَدْ خَلَقْنَا الْإِنسَانَ فِي أَحْسَنِ تَقْوِيمٍ",
+            "ثُمَّ رَدَدْنَاهُ أَسْفَلَ سَافِلِينَ",
+            "إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ فَلَهُمْ أَجْرٌ غَيْرُ مَمْنُونٍ",
+            "فَمَا يُكَذِّبُكَ بَعْدُ بِالدِّينِ",
+            "أَلَيْسَ اللَّهُ بِأَحْكَمِ الْحَاكِمِينَ",
+        ],
+    },
+    "alaq": {
+        "name": "Al-Alaq (96)",
+        "ayahs": [
+            BISMILLAH,
+            "اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ",
+            "خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ",
+            "اقْرَأْ وَرَبُّكَ الْأَكْرَمُ",
+            "الَّذِي عَلَّمَ بِالْقَلَمِ",
+            "عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ",
+            "كَلَّا إِنَّ الْإِنسَانَ لَيَطْغَى",
+            "أَن رَّآهُ اسْتَغْنَى",
+            "إِنَّ إِلَى رَبِّكَ الرُّجْعَى",
+            "أَرَأَيْتَ الَّذِي يَنْهَى",
+            "عَبْدًا إِذَا صَلَّى",
+            "أَرَأَيْتَ إِن كَانَ عَلَى الْهُدَى",
+            "أَوْ أَمَرَ بِالتَّقْوَى",
+            "أَرَأَيْتَ إِن كَذَّبَ وَتَوَلَّى",
+            "أَلَمْ يَعْلَم بِأَنَّ اللَّهَ يَرَى",
+            "كَلَّا لَئِن لَّمْ يَنتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ",
+            "نَاصِيَةٍ كَاذِبَةٍ خَاطِئَةٍ",
+            "فَلْيَدْعُ نَادِيَهُ",
+            "سَنَدْعُ الزَّبَانِيَةَ",
+            "كَلَّا لَا تُطِعْهُ وَاسْجُدْ وَاقْتَرِب",
+        ],
+    },
+    "qadr": {
+        "name": "Al-Qadr (97)",
+        "ayahs": [
+            BISMILLAH,
+            "إِنَّا أَنزَلْنَاهُ فِي لَيْلَةِ الْقَدْرِ",
+            "وَمَا أَدْرَاكَ مَا لَيْلَةُ الْقَدْرِ",
+            "لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ",
+            "تَنَزَّلُ الْمَلَائِكَةُ وَالرُّوحُ فِيهَا بِإِذْنِ رَبِّهِم مِّن كُلِّ أَمْرٍ",
+            "سَلَامٌ هِيَ حَتَّى مَطْلَعِ الْفَجْرِ",
+        ],
+    },
+    "bayyina": {
+        "name": "Al-Bayyina (98)",
+        "ayahs": [
+            BISMILLAH,
+            "لَمْ يَكُنِ الَّذِينَ كَفَرُوا مِنْ أَهْلِ الْكِتَابِ وَالْمُشْرِكِينَ مُنفَكِّينَ حَتَّى تَأْتِيَهُمُ الْبَيِّنَةُ",
+            "رَسُولٌ مِّنَ اللَّهِ يَتْلُو صُحُفًا مُّطَهَّرَةً",
+            "فِيهَا كُتُبٌ قَيِّمَةٌ",
+            "وَمَا تَفَرَّقَ الَّذِينَ أُوتُوا الْكِتَابَ إِلَّا مِن بَعْدِ مَا جَاءَتْهُمُ الْبَيِّنَةُ",
+            "وَمَا أُمِرُوا إِلَّا لِيَعْبُدُوا اللَّهَ مُخْلِصِينَ لَهُ الدِّينَ حُنَفَاءَ وَيُقِيمُوا الصَّلَاةَ وَيُؤْتُوا الزَّكَاةَ وَذَلِكَ دِينُ الْقَيِّمَةِ",
+            "إِنَّ الَّذِينَ كَفَرُوا مِنْ أَهْلِ الْكِتَابِ وَالْمُشْرِكِينَ فِي نَارِ جَهَنَّمَ خَالِدِينَ فِيهَا أُولَئِكَ هُمْ شَرُّ الْبَرِيَّةِ",
+            "إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ أُولَئِكَ هُمْ خَيْرُ الْبَرِيَّةِ",
+            "جَزَاؤُهُمْ عِندَ رَبِّهِمْ جَنَّاتُ عَدْنٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ خَالِدِينَ فِيهَا أَبَدًا رَّضِيَ اللَّهُ عَنْهُمْ وَرَضُوا عَنْهُ ذَلِكَ لِمَنْ خَشِيَ رَبَّهُ",
+        ],
+    },
+    "zalzala": {
+        "name": "Al-Zalzala (99)",
+        "ayahs": [
+            BISMILLAH,
+            "إِذَا زُلْزِلَتِ الْأَرْضُ زِلْزَالَهَا",
+            "وَأَخْرَجَتِ الْأَرْضُ أَثْقَالَهَا",
+            "وَقَالَ الْإِنسَانُ مَا لَهَا",
+            "يَوْمَئِذٍ تُحَدِّثُ أَخْبَارَهَا",
+            "بِأَنَّ رَبَّكَ أَوْحَى لَهَا",
+            "يَوْمَئِذٍ يَصْدُرُ النَّاسُ أَشْتَاتًا لِّيُرَوْا أَعْمَالَهُمْ",
+            "فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُ",
+            "وَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ شَرًّا يَرَهُ",
+        ],
+    },
+    "adiyat": {
+        "name": "Al-Adiyat (100)",
+        "ayahs": [
+            BISMILLAH,
+            "وَالْعَادِيَاتِ ضَبْحًا",
+            "فَالْمُورِيَاتِ قَدْحًا",
+            "فَالْمُغِيرَاتِ صُبْحًا",
+            "فَأَثَرْنَ بِهِ نَقْعًا",
+            "فَوَسَطْنَ بِهِ جَمْعًا",
+            "إِنَّ الْإِنسَانَ لِرَبِّهِ لَكَنُودٌ",
+            "وَإِنَّهُ عَلَى ذَلِكَ لَشَهِيدٌ",
+            "وَإِنَّهُ لِحُبِّ الْخَيْرِ لَشَدِيدٌ",
+            "أَفَلَا يَعْلَمُ إِذَا بُعْثِرَ مَا فِي الْقُبُورِ",
+            "وَحُصِّلَ مَا فِي الصُّدُورِ",
+            "إِنَّ رَبَّهُم بِهِمْ يَوْمَئِذٍ لَّخَبِيرٌ",
+        ],
+    },
+    "qaria": {
+        "name": "Al-Qaria (101)",
+        "ayahs": [
+            BISMILLAH,
+            "الْقَارِعَةُ",
+            "مَا الْقَارِعَةُ",
+            "وَمَا أَدْرَاكَ مَا الْقَارِعَةُ",
+            "يَوْمَ يَكُونُ النَّاسُ كَالْفَرَاشِ الْمَبْثُوثِ",
+            "وَتَكُونُ الْجِبَالُ كَالْعِهْنِ الْمَنفُوشِ",
+            "فَأَمَّا مَن ثَقُلَتْ مَوَازِينُهُ",
+            "فَهُوَ فِي عِيشَةٍ رَّاضِيَةٍ",
+            "وَأَمَّا مَنْ خَفَّتْ مَوَازِينُهُ",
+            "فَأُمُّهُ هَاوِيَةٌ",
+            "وَمَا أَدْرَاكَ مَا هِيَهْ",
+            "نَارٌ حَامِيَةٌ",
+        ],
+    },
+    "takathur": {
+        "name": "Al-Takathur (102)",
+        "ayahs": [
+            BISMILLAH,
+            "أَلْهَاكُمُ التَّكَاثُرُ",
+            "حَتَّى زُرْتُمُ الْمَقَابِرَ",
+            "كَلَّا سَوْفَ تَعْلَمُونَ",
+            "ثُمَّ كَلَّا سَوْفَ تَعْلَمُونَ",
+            "كَلَّا لَوْ تَعْلَمُونَ عِلْمَ الْيَقِينِ",
+            "لَتَرَوُنَّ الْجَحِيمَ",
+            "ثُمَّ لَتَرَوُنَّهَا عَيْنَ الْيَقِينِ",
+            "ثُمَّ لَتُسْأَلُنَّ يَوْمَئِذٍ عَنِ النَّعِيمِ",
+        ],
+    },
     "asr": {
         "name": "Al-Asr (103)",
         "ayahs": [
@@ -464,8 +669,8 @@ def run_tarteel_pass(audio_path, expected_words):
 
 def _build_prompt(surah, ayah_list, full_text):
     """Shared prompt for all multimodal assessment passes."""
-    return f"""You are a warm, experienced Quran teacher giving feedback after a child's recitation practice session.
-You are speaking to the parent, with a final note directed at the child.
+    return f"""You are an experienced Quran teacher giving concise feedback on a child's recitation.
+Be direct and clear. No greetings, no placeholders like [Parent Name] or [Child Name].
 
 The child was supposed to recite {surah['name']}.
 The expected Arabic text is:
@@ -483,11 +688,13 @@ Listen carefully to the audio recording and provide the following:
 
 3. WORDS TO WORK ON: Any specific words that were missing, substituted, or unclear — phrased as gentle guidance. E.g. "The word X wasn't quite there — worth drilling this one."
 
-4. FOR THE PARENT: 2-3 sentences as a teacher speaking to a parent after class. What went well, what to focus on at home, any patterns worth noting (hesitations, rushing, prompting needed). Honest but encouraging.
+4. FOR THE PARENT: 2-3 short sentences. What went well, what needs work at home, any patterns worth noting (hesitations, rushing, needing prompting). Straightforward and honest.
 
-5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
+5. FOR THE CHILD: One short sentence of encouragement. Specific to something they actually did well in this recitation.
 
-Important: Respond entirely in English except for Arabic Quranic text when quoting specific words or ayahs.
+Respond in English only. Use Arabic script only when quoting specific Quranic words or ayahs.
+
+IMPORTANT: If the audio is silent, empty, too short, or contains no recognisable recitation, do not fabricate an assessment. Instead respond only with: "INVALID RECORDING: [reason]" and nothing else.
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
@@ -588,8 +795,8 @@ def run_gemini_pass(audio_path, surah, expected_words):
     )
     full_text = get_full_text(surah)
 
-    prompt = f"""You are a warm, experienced Quran teacher giving feedback after a child's recitation practice session.
-You are speaking to the parent, with a final note directed at the child.
+    prompt = f"""You are an experienced Quran teacher giving concise feedback on a child's recitation.
+Be direct and clear. No greetings, no placeholders like [Parent Name] or [Child Name].
 
 The child was supposed to recite {surah['name']}.
 The expected Arabic text is:
@@ -607,11 +814,13 @@ Listen carefully to the audio recording and provide the following:
 
 3. WORDS TO WORK ON: Any specific words that were missing, substituted, or unclear — phrased as gentle guidance, not a report. E.g. "The word X wasn't quite there — worth drilling this one."
 
-4. FOR THE PARENT: 2-3 sentences as a teacher speaking to a parent after class. What went well, what to focus on at home, any patterns worth noting (hesitations, rushing, prompting needed). Honest but encouraging.
+4. FOR THE PARENT: 2-3 short sentences. What went well, what needs work at home, any patterns worth noting (hesitations, rushing, needing prompting). Straightforward and honest.
 
-5. FOR THE CHILD: One sentence spoken directly to the child. Warm, specific, and motivating. Reference something they actually did well.
+5. FOR THE CHILD: One short sentence of encouragement. Specific to something they actually did well in this recitation.
 
-Important: Respond entirely in English except for Arabic Quranic text when quoting specific words or ayahs.
+Respond in English only. Use Arabic script only when quoting specific Quranic words or ayahs.
+
+IMPORTANT: If the audio is silent, empty, too short, or contains no recognisable recitation, do not fabricate an assessment. Instead respond only with: "INVALID RECORDING: [reason]" and nothing else.
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
@@ -1121,7 +1330,7 @@ Examples:
         """
     )
     parser.add_argument("--audio", required=True, help="Path to audio file (m4a, mp3, wav, webm)")
-    parser.add_argument("--surah", default="ikhlas", help="Surah key: fatiha, asr, humaza, fil, quraysh, maun, kawthar, kafirun, nasr, masad, ikhlas, falaq, nas")
+    parser.add_argument("--surah", default="ikhlas", help="Surah key: fatiha, shams, layl, duha, sharh, tin, alaq, qadr, bayyina, zalzala, adiyat, qaria, takathur, asr, humaza, fil, quraysh, maun, kawthar, kafirun, nasr, masad, ikhlas, falaq, nas")
     parser.add_argument("--run-a", action="store_true", help="Run Pass A: OpenAI Whisper no prompt")
     parser.add_argument("--run-b", action="store_true", help="Run Pass B: OpenAI Whisper prompted")
     parser.add_argument("--run-c", action="store_true", help="Run Pass C: tarteel-ai local model")
