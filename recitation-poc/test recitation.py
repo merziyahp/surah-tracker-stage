@@ -698,8 +698,9 @@ IMPORTANT: If the audio is silent, empty, too short, or contains no recognisable
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
-- Be lenient only on natural child speech variations: soft voice, stretched vowels, slight accent.
-- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or dropped word endings that change meaning.
+- Be lenient only on natural child speech variations: soft voice, slight accent.
+- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or incorrect word endings.
+- Short vowel endings (ḥarakāt) are not accent variations — they are grammatically meaningful and must match the expected text exactly. The three endings are: ḍamma (u sound), kasra (i sound), and fatḥa (a sound). For example, "lailat-IL qadr" (kasra, genitive — correct in this position) vs "lailat-UL qadr" (ḍamma, nominative — wrong here) is a real error that changes the grammar of the Arabic. Flag any mismatched vowel ending under WORDS TO WORK ON.
 - If uncertain whether a word was said, mark it as unclear rather than assuming Complete.
 
 Full expected text for reference: {full_text}"""
@@ -824,8 +825,9 @@ IMPORTANT: If the audio is silent, empty, too short, or contains no recognisable
 
 Accuracy guidelines:
 - Be strict about whether each word was present or absent. Do not assume a word was said if you did not clearly hear it.
-- Be lenient only on natural child speech variations: soft voice, stretched vowels, slight accent.
-- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or dropped word endings that change meaning.
+- Be lenient only on natural child speech variations: soft voice, slight accent.
+- Do NOT be lenient on: missing words, substituted words, skipped ayahs, or incorrect word endings.
+- Short vowel endings (ḥarakāt) are not accent variations — they are grammatically meaningful and must match the expected text exactly. The three endings are: ḍamma (u sound), kasra (i sound), and fatḥa (a sound). For example, "lailat-IL qadr" (kasra, genitive — correct in this position) vs "lailat-UL qadr" (ḍamma, nominative — wrong here) is a real error that changes the grammar of the Arabic. Flag any mismatched vowel ending under WORDS TO WORK ON.
 - If uncertain whether a word was said, mark it as unclear rather than assuming Complete.
 
 Expected full text for reference: {full_text}"""
